@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, FileText } from 'lucide-react';
 import { useNoteStore } from '../../stores/noteStore';
 
 interface NotePanelProps {

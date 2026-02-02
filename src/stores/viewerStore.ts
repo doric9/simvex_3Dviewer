@@ -9,6 +9,8 @@ interface ViewerStore extends ViewerState {
   setCameraPosition: (position: [number, number, number]) => void;
   setZoom: (zoom: number) => void;
   setPhysicsEnabled: (enabled: boolean) => void;
+  triggerCameraReset: () => void;
+  setShowGrid: (show: boolean) => void;
   reset: () => void;
 }
 
@@ -19,6 +21,8 @@ const initialState: ViewerState = {
   cameraPosition: [5, 5, 5],
   zoom: 1,
   physicsEnabled: false,
+  resetTrigger: 0,
+  showGrid: true,
 };
 
 export const useViewerStore = create<ViewerStore>()(
@@ -31,6 +35,8 @@ export const useViewerStore = create<ViewerStore>()(
       setCameraPosition: (position) => set({ cameraPosition: position }),
       setZoom: (zoom) => set({ zoom }),
       setPhysicsEnabled: (enabled) => set({ physicsEnabled: enabled }),
+      triggerCameraReset: () => set((state) => ({ resetTrigger: (state.resetTrigger ?? 0) + 1 })),
+      setShowGrid: (show) => set({ showGrid: show }),
       reset: () => set(initialState),
     }),
     {

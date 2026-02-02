@@ -1,4 +1,4 @@
-import { ArrowLeft, Network, Menu } from 'lucide-react';
+import { ArrowLeft, Network } from 'lucide-react';
 import { machineryData } from '../../data/machineryData';
 
 interface HeaderProps {
@@ -12,7 +12,7 @@ export default function Header({ currentPage, onBack, onFlowchart, selectedMachi
   const machinery = selectedMachinery ? machineryData[selectedMachinery] : null;
 
   return (
-    <header className="bg-white shadow-md px-6 py-4 flex items-center justify-between z-10">
+    <header className="bg-white shadow-md px-6 py-4 flex items-center justify-between z-50">
       <div className="flex items-center gap-4">
         {currentPage !== 'home' && (
           <button

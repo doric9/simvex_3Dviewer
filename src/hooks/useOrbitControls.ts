@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import * as THREE from 'three';
 
 export function useOrbitControls() {
     useEffect(() => {
@@ -16,12 +17,13 @@ export function useOrbitControls() {
         controlsConfig: {
             enableDamping: true,
             dampingFactor: 0.05,
-            minDistance: 2,
-            maxDistance: 20,
-            maxPolarAngle: Math.PI / 2,
+            minDistance: 0.5,
+            maxDistance: 1000,
+            minPolarAngle: 0, // Allow looking from directly above
+            maxPolarAngle: Math.PI, // Allow looking from directly below
             enablePan: true,
-            panSpeed: 0.5,
-            rotateSpeed: 0.5,
+            panSpeed: 1.0,
+            rotateSpeed: 0.8, // Slightly faster for more responsive feel
             zoomSpeed: 0.8,
             autoRotate: false,
             autoRotateSpeed: 2.0

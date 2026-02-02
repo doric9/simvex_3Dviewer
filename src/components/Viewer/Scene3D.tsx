@@ -7,9 +7,9 @@
  * - 설정값은 Hook에서 가져옴
  */
 
-import { Suspense } from 'react';
+import { Suspense, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, Html } from '@react-three/drei';
 import { Machinery } from '../../types';
 import ModelGroup from './ModelGroup';
 import { useViewerStore } from '../../stores/viewerStore';
@@ -23,18 +23,26 @@ interface Scene3DProps {
 }
 
 export default function Scene3D({ machinery }: Scene3DProps) {
-  const { physicsEnabled } = useViewerStore();
+  const { physicsEnabled, showGrid } = useViewerStore();
 
   // 🎣 Hook 1: 씬 설정 (본인)
   const { lightingConfig, environment } = useSceneSetup();
 
   // 🎣 Hook 2: 카메라 컨트롤 설정 (도영님)
   const { controlsConfig } = useOrbitControls();
+  const { resetTrigger } = useViewerStore();
+  const controlsRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.reset();
+    }
+  }, [resetTrigger]);
 
   return (
     <Canvas shadows>
-      <PerspectiveCamera makeDefault position={[5, 5, 5]} fov={50} />
-      
+      <PerspectiveCamera makeDefault position={[100, 100, 100]} fov={50} />
+
       {/* 조명 (설정값은 Hook에서) */}
       <ambientLight intensity={lightingConfig.ambient.intensity} />
       <directionalLight
@@ -44,9 +52,9 @@ export default function Scene3D({ machinery }: Scene3DProps) {
         shadow-mapSize-width={lightingConfig.directional.shadowMapSize.width}
         shadow-mapSize-height={lightingConfig.directional.shadowMapSize.height}
       />
-      <pointLight 
-        position={lightingConfig.point.position as [number, number, number]} 
-        intensity={lightingConfig.point.intensity} 
+      <pointLight
+        position={lightingConfig.point.position as [number, number, number]}
+        intensity={lightingConfig.point.intensity}
       />
       <hemisphereLight intensity={lightingConfig.hemisphere.intensity} />
 
@@ -54,16 +62,25 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       <Environment preset={environment as any} />
 
       {/* 3D 모델 그룹 */}
-      <Suspense fallback={null}>
+      <Suspense fallback={
+        <Html center>
+          <div className="flex flex-col items-center justify-center p-4 bg-white/80 backdrop-blur rounded-lg shadow-xl min-w-[200px]">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+            <p className="text-gray-800 font-semibold">3D 모델 로딩중...</p>
+          </div>
+        </Html>
+      }>
         <ModelGroup machinery={machinery} physicsEnabled={physicsEnabled} />
       </Suspense>
 
       {/* 카메라 컨트롤 (설정값은 Hook에서) */}
       <OrbitControls
+        ref={controlsRef}
         enableDamping={controlsConfig.enableDamping}
         dampingFactor={controlsConfig.dampingFactor}
         minDistance={controlsConfig.minDistance}
         maxDistance={controlsConfig.maxDistance}
+        minPolarAngle={controlsConfig.minPolarAngle}
         maxPolarAngle={controlsConfig.maxPolarAngle}
         enablePan={controlsConfig.enablePan}
         panSpeed={controlsConfig.panSpeed}
@@ -74,7 +91,7 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       />
 
       {/* 그리드 */}
-      <gridHelper args={[20, 20, 0x888888, 0xcccccc]} />
+      {showGrid !== false && <gridHelper args={[200, 40, 0x888888, 0xcccccc]} />}
     </Canvas>
   );
 }

@@ -23,17 +23,43 @@ export function useModelAnimations(explodeFactor: number, selectedPart: string |
 
   /**
    * 분해 애니메이션 계산 함수
+   * @param originalPos - Original logical position (for direction calculation)
+   * @param center - Center of all parts (fallback for radial explosion)
+   * @param factor - Explosion factor 0-1
+   * @param explodeDirection - Optional explicit direction vector
+   * @param isGround - If true, part stays fixed
    */
-  const calculateExplodePosition = (originalPos: THREE.Vector3, center: THREE.Vector3, factor: number): THREE.Vector3 => {
-    const direction = new THREE.Vector3()
-      .subVectors(originalPos, center)
-      .normalize();
+  const calculateExplodePosition = (
+    originalPos: THREE.Vector3,
+    center: THREE.Vector3,
+    factor: number,
+    explodeDirection?: [number, number, number],
+    isGround?: boolean
+  ): THREE.Vector3 => {
+    // Ground parts don't move
+    if (isGround) {
+      return new THREE.Vector3(0, 0, 0);
+    }
 
-    const explodeDistance = factor * 3;
-    return new THREE.Vector3().addVectors(
-      originalPos,
-      direction.multiplyScalar(explodeDistance)
-    );
+    let direction: THREE.Vector3;
+
+    if (explodeDirection) {
+      // Use explicit direction
+      direction = new THREE.Vector3(explodeDirection[0], explodeDirection[1], explodeDirection[2]).normalize();
+    } else {
+      // Fallback: radial explosion from center
+      direction = new THREE.Vector3()
+        .subVectors(originalPos, center)
+        .normalize();
+
+      // If direction is zero (part at center), default to up
+      if (direction.length() === 0) {
+        direction.set(0, 1, 0);
+      }
+    }
+
+    const explodeDistance = factor * 150; // Scale for visibility
+    return direction.multiplyScalar(explodeDistance);
   };
 
   /**
@@ -46,16 +72,16 @@ export function useModelAnimations(explodeFactor: number, selectedPart: string |
           // 선택된 부품: 녹색 하이라이트
           const mat = child.material as THREE.MeshStandardMaterial; // Casting for safety
           if (mat.emissive) {
-             mat.emissive.setHex(0x00ff00);
-             mat.emissiveIntensity = 0.3;
+            mat.emissive.setHex(0x00ff00);
+            mat.emissiveIntensity = 0.3;
           }
         } else {
           // 일반 부품: 하이라이트 제거
-           const mat = child.material as THREE.MeshStandardMaterial;
-           if (mat.emissive) {
-             mat.emissive.setHex(0x000000);
-             mat.emissiveIntensity = 0;
-           }
+          const mat = child.material as THREE.MeshStandardMaterial;
+          if (mat.emissive) {
+            mat.emissive.setHex(0x000000);
+            mat.emissiveIntensity = 0;
+          }
         }
       }
     });
@@ -81,11 +107,11 @@ export function useModelAnimations(explodeFactor: number, selectedPart: string |
     // 애니메이션 계산 함수
     calculateExplodePosition,
     applyHighlight,
-    
+
     // 컨트롤 함수
     toggleAutoRotate,
     setRotationSpeed,
-    
+
     // 상태
     animationState: animationStateRef.current
   };

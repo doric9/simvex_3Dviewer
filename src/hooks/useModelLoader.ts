@@ -1,69 +1,113 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
 import { Machinery } from '../../types';
 
 export function useModelLoader(machinery: Machinery) {
     const [models, setModels] = useState<Map<string, THREE.Group>>(new Map());
     const [originalPositions, setOriginalPositions] = useState<Map<string, THREE.Vector3>>(new Map());
-    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Prepare URLs
+    const modelPaths = useMemo(() => {
+        return machinery.parts.map(part => {
+            // Encode URL to handle spaces in filenames
+            // encodeURI encodes spaces to %20 but leaves slashes alone.
+            return encodeURI(part.file);
+        });
+    }, [machinery]);
+
+    // Load models using Drei's useGLTF
+    // This hook will suspend the component until loaded
+    // We pass true to useDraco? Standard GLTFLoader usually doesn't need it unless the file is compressed.
+    // Simvex files likely aren't Draco compressed.
+    const gltfs = useGLTF(modelPaths);
+
     useEffect(() => {
-        console.log('📦 [useModelLoader] 모델 로딩 시작...');
-        setIsLoading(true);
-        setError(null);
+        if (!gltfs) return;
+
+        console.log('📦 [useModelLoader] GLTF Loaded via Drei', gltfs);
 
         const loadedModels = new Map<string, THREE.Group>();
         const positions = new Map<string, THREE.Vector3>();
 
         try {
-            machinery.parts.forEach((part, index) => {
-                // 실제 프로젝트에서는 GLTFLoader 사용
-                // 데모용으로 간단한 박스 생성
-                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x3b82f6,
-                    metalness: 0.5,
-                    roughness: 0.3,
+            // gltfs is an array of GLTF results corresponding to modelPaths
+            // If only one model, useGLTF might return single object, but we passed array so valid.
+            const results = Array.isArray(gltfs) ? gltfs : [gltfs];
+
+            results.forEach((gltf, index) => {
+                const part = machinery.parts[index];
+                const model = gltf.scene.clone(); // Clone to allow re-use if needed
+
+                // Enable shadows
+                model.traverse((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        if (child.material) {
+                            child.material.envMapIntensity = 1;
+                            child.material.needsUpdate = true;
+                        }
+                    }
                 });
-                const mesh = new THREE.Mesh(geometry, material);
 
-                // 원형 배치
-                const angle = (index / machinery.parts.length) * Math.PI * 2;
-                const radius = 1.5;
-                const x = Math.cos(angle) * radius;
-                const z = Math.sin(angle) * radius;
-                const y = 0;
+                model.userData = { partName: part.name };
 
-                mesh.position.set(x, y, z);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                mesh.userData = { partName: part.name };
+                // Scale up the model
+                const scale = 100;
+                model.scale.set(scale, scale, scale);
+
+                // WARNING: We must update the matrix world for the scales to apply before box calculation
+                // However, since the model is not in the scene graph yet, we update local matrix and use it.
+                model.updateMatrix();
+
+                // Calculate Bounding Box to find the center offset (logical position)
+                const box = new THREE.Box3().setFromObject(model);
+
+                let center = new THREE.Vector3(0, 0, 0);
+                if (!box.isEmpty()) {
+                    box.getCenter(center);
+                } else {
+                    console.warn(`⚠️ [${part.name}] Empty Bounding Box`);
+                }
+
+                // Use this center as the "direction" vector for explosion.
+                // Since the model is drawn at 0,0,0 but its geometry is offset, 
+                // the 'center' vector points from 0,0,0 to where the part visually is.
+
+                // Use explicit position from data if available, otherwise use calculated center
+                const explicitPos = part.position;
+                const x = explicitPos ? explicitPos[0] : center.x;
+                const y = explicitPos ? explicitPos[1] : center.y;
+                const z = explicitPos ? explicitPos[2] : center.z;
+
+                // Apply assembly offset for visual positioning
+                const assemblyOffset = part.assemblyOffset || [0, 0, 0];
+                model.position.set(assemblyOffset[0], assemblyOffset[1], assemblyOffset[2]);
 
                 const group = new THREE.Group();
-                group.add(mesh);
+                group.add(model);
 
                 loadedModels.set(part.name, group);
                 positions.set(part.name, new THREE.Vector3(x, y, z));
 
-                console.log(`  ✓ ${part.name} 로딩 완료`);
+                console.log(`✅ [${part.name}] Offset: (${assemblyOffset[0]}, ${assemblyOffset[1]}, ${assemblyOffset[2]}), Explode: (${x}, ${y}, ${z})`);
             });
 
             setModels(loadedModels);
             setOriginalPositions(positions);
-            setIsLoading(false);
-            console.log('✅ [useModelLoader] 모든 모델 로딩 완료');
         } catch (err: any) {
-            console.error('❌ [useModelLoader] 모델 로딩 실패:', err);
-            setError(err.message || 'Unknown error');
-            setIsLoading(false);
+            console.error('❌ Error processing loaded models:', err);
+            setError(err.message);
         }
-    }, [machinery]);
+
+    }, [gltfs, machinery]);
 
     return {
         models,
         originalPositions,
-        isLoading,
+        isLoading: false, // Suspense handles loading state
         error
     };
 }

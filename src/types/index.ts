@@ -5,6 +5,10 @@ export interface MachineryPart {
   material?: string;
   role?: string;
   parent?: string;
+  position?: [number, number, number]; // [x, y, z] for explosion direction calculation
+  assemblyOffset?: [number, number, number]; // [x, y, z] visual offset for assembly alignment
+  explodeDirection?: [number, number, number]; // Direction vector for explosion (normalized)
+  isGround?: boolean; // If true, this part stays fixed during explosion
 }
 
 export interface Machinery {
@@ -23,6 +27,8 @@ export interface ViewerState {
   cameraPosition: [number, number, number];
   zoom: number;
   physicsEnabled: boolean;
+  resetTrigger?: number;
+  showGrid?: boolean;
 }
 
 export interface Note {

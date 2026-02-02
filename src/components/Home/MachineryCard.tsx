@@ -9,7 +9,10 @@ interface MachineryCardProps {
 export default function MachineryCard({ machinery, onSelect }: MachineryCardProps) {
   return (
     <div
-      onClick={onSelect}
+      onClick={() => {
+        console.log('🖱️ Card Clicked:', machinery.name);
+        onSelect();
+      }}
       className="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group"
     >
       <div className="relative h-48 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center overflow-hidden">

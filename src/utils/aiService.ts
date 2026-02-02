@@ -43,15 +43,27 @@ export async function sendMessageToAI(
     ];
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages,
       temperature: 0.7,
       max_tokens: 500,
     });
 
     return response.choices[0]?.message?.content || '응답을 생성할 수 없습니다.';
-  } catch (error) {
+  } catch (error: any) {
     console.error('OpenAI API 에러:', error);
-    return 'AI 응답 중 오류가 발생했습니다. 나중에 다시 시도해주세요.';
+    console.error('에러 상세:', error?.message, error?.status, error?.code);
+
+    if (error?.status === 401) {
+      return 'API 키가 유효하지 않습니다. .env 파일의 VITE_OPENAI_API_KEY를 확인해주세요.';
+    }
+    if (error?.status === 429) {
+      return 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+    }
+    if (error?.status === 500) {
+      return 'OpenAI 서버 오류입니다. 잠시 후 다시 시도해주세요.';
+    }
+
+    return `AI 응답 중 오류가 발생했습니다: ${error?.message || '알 수 없는 오류'}`;
   }
 }

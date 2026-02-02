@@ -71,11 +71,12 @@ export const machineryData: Record<string, Machinery> = {
 `,
     thumbnail: '/models/Suspension/서스펜션 조립도.png',
     parts: [
-      { name: 'BASE', file: '/models/Suspension/BASE.glb', material: 'Steel', role: '베이스' },
-      { name: 'SPRING', file: '/models/Suspension/SPRING.glb', material: 'Spring Steel', role: '스프링' },
-      { name: 'ROD', file: '/models/Suspension/ROD.glb', material: 'Steel', role: '로드' },
-      { name: 'NUT', file: '/models/Suspension/NUT.glb', material: 'Steel', role: '너트' },
-      { name: 'NIT', file: '/models/Suspension/NIT.glb', material: 'Steel', role: '니트' },
+      // 모든 파츠 기본 위치 (assemblyOffset 0)
+      { name: 'BASE', file: '/models/Suspension/BASE.glb', material: 'Steel', role: '베이스', position: [0, 0, 0], isGround: true, assemblyOffset: [0, 0, 0] },
+      { name: 'ROD', file: '/models/Suspension/ROD.glb', material: 'Steel', role: '로드', position: [0, 20, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 0, 0] },
+      { name: 'SPRING', file: '/models/Suspension/SPRING.glb', material: 'Spring Steel', role: '스프링', position: [0, 40, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 0, 0] },
+      { name: 'NIT', file: '/models/Suspension/NIT.glb', material: 'Steel', role: '빨간 기어', position: [0, 60, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 0, 0] },
+      { name: 'NUT', file: '/models/Suspension/NUT.glb', material: 'Steel', role: '너트', position: [0, 80, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 0, 0] },
     ],
   },
   'Leaf Spring': {

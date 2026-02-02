@@ -7,7 +7,7 @@
  * - Three.js 로직은 모두 Hook으로 분리
  */
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Machinery } from '../../types';
@@ -25,7 +25,7 @@ interface ModelGroupProps {
 
 export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProps) {
   const groupRef = useRef<THREE.Group>(null);
-  
+
   // Zustand Store
   const { explodeFactor, selectedPart, setSelectedPart } = useViewerStore();
 
@@ -33,9 +33,9 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
   const { models, originalPositions, isLoading, error } = useModelLoader(machinery);
 
   // 🎣 Hook 2: 애니메이션 (상진님)
-  const { 
-    calculateExplodePosition, 
-    applyHighlight 
+  const {
+    calculateExplodePosition,
+    applyHighlight
   } = useModelAnimations(explodeFactor, selectedPart);
 
   // 🎣 Hook 3: 인터랙션 (공통)
@@ -45,18 +45,37 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
     handlePointerOut
   } = usePartInteraction(selectedPart, setSelectedPart);
 
+  // Calculate center for explosion animation (once positions are loaded)
+  const center = useMemo(() => {
+    if (originalPositions.size === 0) return new THREE.Vector3(0, 0, 0);
+
+    const sum = new THREE.Vector3();
+    let count = 0;
+
+    originalPositions.forEach((pos) => {
+      sum.add(pos);
+      count++;
+    });
+
+    if (count === 0) return new THREE.Vector3(0, 0, 0);
+    return sum.divideScalar(count);
+  }, [originalPositions]);
+
   // 프레임마다 실행되는 애니메이션 루프
   useFrame(() => {
     if (!groupRef.current) return;
-
-    const center = new THREE.Vector3(0, 0, 0);
 
     models.forEach((model, partName) => {
       const originalPos = originalPositions.get(partName);
       if (!originalPos) return;
 
+      // Find part metadata for explosion properties
+      const partData = machinery.parts.find(p => p.name === partName);
+      const explodeDirection = partData?.explodeDirection;
+      const isGround = partData?.isGround;
+
       // 분해 애니메이션 적용
-      const targetPos = calculateExplodePosition(originalPos, center, explodeFactor);
+      const targetPos = calculateExplodePosition(originalPos, center, explodeFactor, explodeDirection, isGround);
       model.position.lerp(targetPos, 0.1);
 
       // 하이라이트 적용
