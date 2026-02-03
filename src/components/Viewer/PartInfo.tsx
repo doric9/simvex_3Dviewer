@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Box } from 'lucide-react';
 import { MachineryPart } from '../../types';
 import { useViewerStore } from '../../stores/viewerStore';
@@ -9,7 +9,14 @@ interface PartInfoProps {
 
 export default function PartInfo({ part }: PartInfoProps) {
   const { setSelectedPart } = useViewerStore();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  // Auto-expand when a new part is selected
+  useEffect(() => {
+    if (part) {
+      setIsExpanded(true);
+    }
+  }, [part?.name]);
 
   if (!part) return null;
 

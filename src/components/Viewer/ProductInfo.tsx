@@ -8,7 +8,7 @@ interface ProductInfoProps {
 }
 
 export default function ProductInfo({ machinery }: ProductInfoProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // Collapsed state: minimal icon button
   if (!isOpen) {
