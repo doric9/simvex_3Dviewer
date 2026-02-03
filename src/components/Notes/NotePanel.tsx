@@ -7,7 +7,7 @@ interface NotePanelProps {
 }
 
 export default function NotePanel({ machineryId }: NotePanelProps) {
-  const { notes, addNote, updateNote, deleteNote, getNotesByMachinery } = useNoteStore();
+  const { addNote, updateNote, deleteNote, getNotesByMachinery } = useNoteStore();
   const [currentNote, setCurrentNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -90,9 +90,10 @@ export default function NotePanel({ machineryId }: NotePanelProps) {
                   </button>
                   <button
                     onClick={() => deleteNote(note.id)}
-                    className="text-xs text-red-600 hover:text-red-800"
+                    className="text-red-500 hover:text-red-700 p-1"
+                    title="삭제"
                   >
-                    삭제
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>

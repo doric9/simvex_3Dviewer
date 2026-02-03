@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+// @ts-ignore
 import { Machinery } from '../../types';
 
 export function useModelLoader(machinery: Machinery) {
@@ -10,7 +11,7 @@ export function useModelLoader(machinery: Machinery) {
 
     // Prepare URLs
     const modelPaths = useMemo(() => {
-        return machinery.parts.map(part => {
+        return machinery.parts.map((part: any) => {
             // Encode URL to handle spaces in filenames
             // encodeURI encodes spaces to %20 but leaves slashes alone.
             return encodeURI(part.file);
@@ -19,14 +20,10 @@ export function useModelLoader(machinery: Machinery) {
 
     // Load models using Drei's useGLTF
     // This hook will suspend the component until loaded
-    // We pass true to useDraco? Standard GLTFLoader usually doesn't need it unless the file is compressed.
-    // Simvex files likely aren't Draco compressed.
     const gltfs = useGLTF(modelPaths);
 
     useEffect(() => {
         if (!gltfs) return;
-
-        console.log('📦 [useModelLoader] GLTF Loaded via Drei', gltfs);
 
         const loadedModels = new Map<string, THREE.Group>();
         const positions = new Map<string, THREE.Vector3>();
@@ -41,7 +38,7 @@ export function useModelLoader(machinery: Machinery) {
                 const model = gltf.scene.clone(); // Clone to allow re-use if needed
 
                 // Enable shadows
-                model.traverse((child) => {
+                model.traverse((child: any) => {
                     if (child instanceof THREE.Mesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
@@ -58,23 +55,16 @@ export function useModelLoader(machinery: Machinery) {
                 const scale = 100;
                 model.scale.set(scale, scale, scale);
 
-                // WARNING: We must update the matrix world for the scales to apply before box calculation
+                // Calculate Bounding Box to find the center offset (logical position)
+                // We must update the matrix world for the scales to apply before box calculation
                 // However, since the model is not in the scene graph yet, we update local matrix and use it.
                 model.updateMatrix();
 
-                // Calculate Bounding Box to find the center offset (logical position)
                 const box = new THREE.Box3().setFromObject(model);
-
-                let center = new THREE.Vector3(0, 0, 0);
+                const center = new THREE.Vector3(0, 0, 0);
                 if (!box.isEmpty()) {
                     box.getCenter(center);
-                } else {
-                    console.warn(`⚠️ [${part.name}] Empty Bounding Box`);
                 }
-
-                // Use this center as the "direction" vector for explosion.
-                // Since the model is drawn at 0,0,0 but its geometry is offset, 
-                // the 'center' vector points from 0,0,0 to where the part visually is.
 
                 // Use explicit position from data if available, otherwise use calculated center
                 const explicitPos = part.position;
@@ -86,13 +76,14 @@ export function useModelLoader(machinery: Machinery) {
                 const assemblyOffset = part.assemblyOffset || [0, 0, 0];
                 model.position.set(assemblyOffset[0], assemblyOffset[1], assemblyOffset[2]);
 
+                // We wrap in a group to handle positioning cleanly if needed, 
+                // but here 'model' is the scene which is a Group usually.
+                // To be safe and consistent with previous logic:
                 const group = new THREE.Group();
                 group.add(model);
 
                 loadedModels.set(part.name, group);
                 positions.set(part.name, new THREE.Vector3(x, y, z));
-
-                console.log(`✅ [${part.name}] Offset: (${assemblyOffset[0]}, ${assemblyOffset[1]}, ${assemblyOffset[2]}), Explode: (${x}, ${y}, ${z})`);
             });
 
             setModels(loadedModels);

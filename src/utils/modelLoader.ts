@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+// @ts-ignore
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export function calculateExplodePosition(
   originalPosition: THREE.Vector3,
@@ -18,17 +20,20 @@ export function calculateExplodePosition(
   );
 }
 
-export function loadGLBModel(url: string): Promise<THREE.Group> {
+export function loadModel(url: string): Promise<THREE.Group> {
   return new Promise((resolve, reject) => {
-    const loader = new THREE.GLTFLoader();
+    const loader = new GLTFLoader();
     loader.load(
       url,
-      (gltf) => resolve(gltf.scene),
+      (gltf: { scene: THREE.Group }) => resolve(gltf.scene),
       undefined,
-      (error) => reject(error)
+      (error: unknown) => reject(error)
     );
   });
 }
+
+// Alias for compatibility if needed, or replace usages
+export const loadGLBModel = loadModel;
 
 export function getModelCenter(object: THREE.Object3D): THREE.Vector3 {
   const box = new THREE.Box3().setFromObject(object);

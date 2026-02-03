@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import * as THREE from 'three';
 
 export function useOrbitControls() {
     useEffect(() => {

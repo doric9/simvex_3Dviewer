@@ -17,6 +17,7 @@ import { useViewerStore } from '../../stores/viewerStore';
 // Hook Import
 import { useSceneSetup } from '../../hooks/useSceneSetup';
 import { useOrbitControls } from '../../hooks/useOrbitControls';
+import PhysicsWrapper from './PhysicsWrapper';
 
 interface Scene3DProps {
   machinery: Machinery;
@@ -62,6 +63,7 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       <Environment preset={environment as any} />
 
       {/* 3D 모델 그룹 */}
+      {/* 3D 모델 그룹 */}
       <Suspense fallback={
         <Html center>
           <div className="flex flex-col items-center justify-center p-4 bg-white/80 backdrop-blur rounded-lg shadow-xl min-w-[200px]">
@@ -70,7 +72,13 @@ export default function Scene3D({ machinery }: Scene3DProps) {
           </div>
         </Html>
       }>
-        <ModelGroup machinery={machinery} physicsEnabled={physicsEnabled} />
+        {/* Physics Wrapper는 조건부로 적용하거나 항상 적용하되 enable prop 제어 */}
+        {/* 간단한 구현을 위해 여기서는 PhysicsWrapper를 조건부 렌더링하지 않고 내부적으로 제어하거나 */}
+        {/* ModelGroup이 Physics Context 내부에 있어야 하므로 여기서 감쌉니다. */}
+        {/* 하지만 기존 로직 유지를 위해 PhysicsWrapper를 새로 만들었으므로 적용합니다. */}
+        <PhysicsWrapper debug={physicsEnabled}>
+          <ModelGroup machinery={machinery} physicsEnabled={physicsEnabled} />
+        </PhysicsWrapper>
       </Suspense>
 
       {/* 카메라 컨트롤 (설정값은 Hook에서) */}

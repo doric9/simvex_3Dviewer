@@ -7,7 +7,16 @@ export function usePartInteraction(selectedPart: string | null, setSelectedPart:
      */
     const handlePartClick = useCallback((event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation();
-        const partName = event.object.userData.partName;
+
+        // Raycasting hits specific Meshes, but partName is often stored on the parent Group.
+        // We traverse up to find the metadata.
+        let target = event.object;
+        let partName = target.userData.partName;
+
+        while (!partName && target.parent) {
+            target = target.parent;
+            partName = target.userData.partName;
+        }
 
         if (partName) {
             // 같은 부품 재클릭 시 선택 해제
@@ -26,7 +35,14 @@ export function usePartInteraction(selectedPart: string | null, setSelectedPart:
         event.stopPropagation();
         document.body.style.cursor = 'pointer';
 
-        const partName = event.object.userData.partName;
+        let target = event.object;
+        let partName = target.userData.partName;
+
+        while (!partName && target.parent) {
+            target = target.parent;
+            partName = target.userData.partName;
+        }
+
         if (partName) {
             console.log(`👆 [usePartInteraction] 호버: ${partName}`);
         }
