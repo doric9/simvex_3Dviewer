@@ -8,9 +8,9 @@
  */
 
 import { Suspense, useRef, useEffect } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, Html } from '@react-three/drei';
-import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { CameraControls as DreiCameraControls, PerspectiveCamera, Environment, Html, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import type CameraControlsImpl from 'camera-controls';
 import { Machinery } from '../../types';
 import ModelGroup from './ModelGroup';
 import { useViewerStore } from '../../stores/viewerStore';
@@ -19,6 +19,8 @@ import { useViewerStore } from '../../stores/viewerStore';
 import { useSceneSetup } from '../../hooks/useSceneSetup';
 import { useOrbitControls } from '../../hooks/useOrbitControls';
 import PhysicsWrapper from './PhysicsWrapper';
+
+type CameraControlsRef = CameraControlsImpl | null;
 
 interface Scene3DProps {
   machinery: Machinery;
@@ -33,7 +35,7 @@ export default function Scene3D({ machinery }: Scene3DProps) {
   // 🎣 Hook 2: 카메라 컨트롤 설정 (도영님)
   const { controlsConfig } = useOrbitControls();
   const { resetTrigger, cameraPosition, cameraTarget } = useViewerStore();
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<CameraControlsRef>(null);
 
   return (
     <Canvas shadows>
@@ -41,9 +43,18 @@ export default function Scene3D({ machinery }: Scene3DProps) {
         controlsRef={controlsRef}
         targetPosition={cameraPosition}
         targetLookAt={cameraTarget}
-        resetTrigger={resetTrigger}
+        resetTrigger={resetTrigger ?? 0}
       />
+      <KeyboardController controlsRef={controlsRef} />
       <PerspectiveCamera makeDefault position={[100, 100, 100]} fov={50} />
+
+      {/* 네비게이션 기즈모 (UX 개선: 사이드바 겹침 방지를 위해 왼쪽 하단 배치) */}
+      <GizmoHelper
+        alignment="bottom-left"
+        margin={[80, 80]}
+      >
+        <GizmoViewport axisColors={['#ff3653', '#0adb46', '#2c8fff']} labelColor="white" />
+      </GizmoHelper>
 
       {/* 조명 (설정값은 Hook에서) */}
       <ambientLight intensity={lightingConfig.ambient.intensity} />
@@ -82,21 +93,18 @@ export default function Scene3D({ machinery }: Scene3DProps) {
         </PhysicsWrapper>
       </Suspense>
 
-      {/* 카메라 컨트롤 (설정값은 Hook에서) */}
-      <OrbitControls
+      {/* 카메라 컨트롤 (OrbitControls 대신 CameraControls 사용) */}
+      <DreiCameraControls
         ref={controlsRef}
-        enableDamping={controlsConfig.enableDamping}
-        dampingFactor={controlsConfig.dampingFactor}
         minDistance={controlsConfig.minDistance}
         maxDistance={controlsConfig.maxDistance}
         minPolarAngle={controlsConfig.minPolarAngle}
         maxPolarAngle={controlsConfig.maxPolarAngle}
-        enablePan={controlsConfig.enablePan}
-        panSpeed={controlsConfig.panSpeed}
-        rotateSpeed={controlsConfig.rotateSpeed}
-        zoomSpeed={controlsConfig.zoomSpeed}
-        autoRotate={controlsConfig.autoRotate}
-        autoRotateSpeed={controlsConfig.autoRotateSpeed}
+        azimuthRotateSpeed={controlsConfig.rotateSpeed}
+        polarRotateSpeed={controlsConfig.rotateSpeed}
+        truckSpeed={controlsConfig.panSpeed}
+        dollySpeed={controlsConfig.zoomSpeed}
+        makeDefault
       />
 
       {/* 그리드 */}
@@ -105,34 +113,81 @@ export default function Scene3D({ machinery }: Scene3DProps) {
   );
 }
 
+interface CameraControllerProps {
+  controlsRef: React.RefObject<CameraControlsRef>;
+  targetPosition: [number, number, number] | null;
+  targetLookAt: [number, number, number] | null;
+  resetTrigger: number;
+}
+
 /**
  * 카메라 애니메이션을 제어하는 내부 컴포넌트
  */
-function CameraController({ controlsRef, targetPosition, targetLookAt, resetTrigger }: any) {
-  const { camera } = useThree();
-  const vec = new THREE.Vector3();
-  const targetVec = new THREE.Vector3();
+function CameraController({ controlsRef, targetPosition, targetLookAt, resetTrigger }: CameraControllerProps) {
 
-  useFrame(() => {
-    // 1. 카메라 위치 보간 (lerp)
-    if (targetPosition) {
-      camera.position.lerp(vec.set(targetPosition[0], targetPosition[1], targetPosition[2]), 0.05);
+  // 카메라 위치/타겟 변경 시 로직
+  useEffect(() => {
+    if (controlsRef.current && targetPosition && targetLookAt) {
+      // CameraControls.setLookAt(px, py, pz, tx, ty, tz, enableTransition)
+      controlsRef.current.setLookAt(
+        targetPosition[0], targetPosition[1], targetPosition[2],
+        targetLookAt[0], targetLookAt[1], targetLookAt[2],
+        true // smooth transition
+      );
     }
+  }, [targetPosition, targetLookAt, controlsRef]);
 
-    // 2. 컨트롤 타겟(중점) 보간
-    if (controlsRef.current && targetLookAt) {
-      controlsRef.current.target.lerp(targetVec.set(targetLookAt[0], targetLookAt[1], targetLookAt[2]), 0.05);
-      controlsRef.current.update();
-    }
-  });
-
-  // 리셋 트리거 발생 시 즉시 처리할 작업 (선택 사항)
+  // 리셋 트리거 발생 시 로직
   useEffect(() => {
     if (resetTrigger > 0 && controlsRef.current) {
       console.log('🔄 카메라 뷰 리셋 실행');
-      // Lerp가 이미 하고 있으므로 별도 즉시 이동은 생략하거나 damping 조정 가능
+      controlsRef.current.reset(true);
     }
   }, [resetTrigger, controlsRef]);
+
+  return null;
+}
+
+interface KeyboardControllerProps {
+  controlsRef: React.RefObject<CameraControlsRef>;
+}
+
+/**
+ * 키보드 방향키 제어를 위한 컴포넌트
+ */
+function KeyboardController({ controlsRef }: KeyboardControllerProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!controlsRef.current) return;
+
+      // Only handle arrow keys for camera rotation
+      const arrowKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+      if (!arrowKeys.includes(e.key)) return;
+
+      // Prevent page scrolling when using arrow keys for camera control
+      e.preventDefault();
+
+      const angle = 10 * (Math.PI / 180); // 10 degrees
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          controlsRef.current.rotate(-angle, 0, true);
+          break;
+        case 'ArrowRight':
+          controlsRef.current.rotate(angle, 0, true);
+          break;
+        case 'ArrowUp':
+          controlsRef.current.rotate(0, -angle, true);
+          break;
+        case 'ArrowDown':
+          controlsRef.current.rotate(0, angle, true);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [controlsRef]);
 
   return null;
 }

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MousePointer2, Move, ZoomIn } from 'lucide-react';
 import { machineryData } from '../../data/machineryData';
 import Scene3D from './Scene3D';
 import ExplodeSlider from './ExplodeSlider';
@@ -60,6 +62,44 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
+
+      {/* Gesture Hint Overlay */}
+      <GestureHint />
     </div>
+  );
+}
+
+function GestureHint() {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex gap-6 bg-black/50 backdrop-blur-md px-6 py-3 rounded-full text-white text-sm z-50 pointer-events-none"
+        >
+          <div className="flex items-center gap-2">
+            <MousePointer2 className="w-4 h-4" />
+            <span>회전</span>
+          </div>
+          <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+            <Move className="w-4 h-4" />
+            <span>이동 (우클릭/두손가락)</span>
+          </div>
+          <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+            <ZoomIn className="w-4 h-4" />
+            <span>확대 (휠/핀치)</span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

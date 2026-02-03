@@ -1,6 +1,19 @@
 import { useEffect } from 'react';
 import { useViewerStore } from '../stores/viewerStore';
 
+/**
+ * CameraControls configuration for @react-three/drei
+ */
+export interface CameraControlsConfig {
+    minDistance: number;
+    maxDistance: number;
+    minPolarAngle: number;
+    maxPolarAngle: number;
+    rotateSpeed: number;
+    panSpeed: number;
+    zoomSpeed: number;
+}
+
 export function useOrbitControls() {
     const { triggerCameraReset } = useViewerStore();
 
@@ -13,20 +26,16 @@ export function useOrbitControls() {
     }, []);
 
     return {
+        // CameraControls-compatible configuration
         controlsConfig: {
-            enableDamping: true,
-            dampingFactor: 0.05, // Smooth damping
             minDistance: 10,
             maxDistance: 500,
             minPolarAngle: 0,
             maxPolarAngle: Math.PI / 1.8, // Prevent going too far under the floor
-            enablePan: true,
-            panSpeed: 1.2,
             rotateSpeed: 1.0,
+            panSpeed: 1.2,
             zoomSpeed: 1.2,
-            autoRotate: false,
-            autoRotateSpeed: 2.0
-        },
+        } as CameraControlsConfig,
         // 컨트롤 함수들
         resetCamera: () => {
             console.log('🔄 카메라 리셋 호출');

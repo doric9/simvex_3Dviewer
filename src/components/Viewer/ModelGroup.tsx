@@ -157,11 +157,24 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
   );
 }
 
+import { useBox } from '@react-three/cannon';
+import type { ThreeEvent } from '@react-three/fiber';
+
+interface PhysicsPartProps {
+  partName: string;
+  model: THREE.Object3D;
+  originalPos: THREE.Vector3;
+  machinery: Machinery;
+  physicsEnabled: boolean;
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerOver: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}
+
 // Sub-component to safely use physics hooks for each part
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerOut }: any) {
-  // Only use physics hook if visualization is physics-enabled. 
-  // BUT we cannot conditionally call hooks. 
+function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerOut }: PhysicsPartProps) {
+  // Only use physics hook if visualization is physics-enabled.
+  // BUT we cannot conditionally call hooks.
   // We must rely on the PhysicsWrapper to handle the simulation context, but useBox MUST run.
   // If physicsEnabled is false, useBox might throw if not inside <Physics>.
   // So we need two different components or a robust way to handle it.
@@ -184,16 +197,20 @@ function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerO
   return <PhysicsPartBody model={model} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
 }
 
-import { useBox } from '@react-three/cannon';
+interface PhysicsPartBodyProps {
+  model: THREE.Object3D;
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerOver: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}
 
-function PhysicsPartBody({ model, onClick, onPointerOver, onPointerOut }: any) {
+function PhysicsPartBody({ model, onClick, onPointerOver, onPointerOut }: PhysicsPartBodyProps) {
   // Basic box shape for all parts for now to enable collision
   // Mass 1 makes it dynamic (falls). Mass 0 would be static.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ref] = useBox(() => ({ mass: 1, position: [model.position.x, model.position.y, model.position.z] }));
 
   // Sync React Three Fiber model with Physics body
-  // We clone the model to avoid mutating the original shared resource improperly if needed, 
+  // We clone the model to avoid mutating the original shared resource improperly if needed,
   // but here we just attach the primitive to the ref.
   return (
     <primitive
