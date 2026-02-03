@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MousePointer2, Move, ZoomIn } from 'lucide-react';
 import { machineryData } from '../../data/machineryData';
@@ -17,6 +17,11 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
   const machinery = machineryData[machineryId];
   const { selectedPart, explodeFactor, setExplodeFactor } = useViewerStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showGestureHint, setShowGestureHint] = useState(true);
+
+  const dismissGestureHint = useCallback(() => {
+    setShowGestureHint(false);
+  }, []);
 
   if (!machinery) {
     return <div>기계를 찾을 수 없습니다.</div>;
@@ -27,7 +32,12 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
       {/* 3D Viewer */}
       <div className="flex-1 flex flex-col relative">
         {/* 3D Scene */}
-        <div id="viewer-canvas" className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200">
+        <div
+          id="viewer-canvas"
+          className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200"
+          onPointerDown={dismissGestureHint}
+          onWheel={dismissGestureHint}
+        >
           <Scene3D machinery={machinery} />
         </div>
 
@@ -64,39 +74,37 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
       />
 
       {/* Gesture Hint Overlay */}
-      <GestureHint />
+      <GestureHint show={showGestureHint} />
     </div>
   );
 }
 
-function GestureHint() {
-  const [show, setShow] = useState(true);
+interface GestureHintProps {
+  show: boolean;
+}
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShow(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
+function GestureHint({ show }: GestureHintProps) {
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex gap-6 bg-black/50 backdrop-blur-md px-6 py-3 rounded-full text-white text-sm z-50 pointer-events-none"
+          transition={{ duration: 0.2 }}
+          className="fixed bottom-44 left-6 flex flex-col gap-1 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-lg text-white text-xs z-50 pointer-events-none"
         >
           <div className="flex items-center gap-2">
-            <MousePointer2 className="w-4 h-4" />
-            <span>회전</span>
+            <MousePointer2 className="w-3 h-3 opacity-70" />
+            <span>드래그: 회전</span>
           </div>
-          <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-            <Move className="w-4 h-4" />
-            <span>이동 (우클릭/두손가락)</span>
+          <div className="flex items-center gap-2">
+            <Move className="w-3 h-3 opacity-70" />
+            <span>우클릭: 이동</span>
           </div>
-          <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-            <ZoomIn className="w-4 h-4" />
-            <span>확대 (휠/핀치)</span>
+          <div className="flex items-center gap-2">
+            <ZoomIn className="w-3 h-3 opacity-70" />
+            <span>휠: 확대</span>
           </div>
         </motion.div>
       )}
