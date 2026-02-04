@@ -1,7 +1,21 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.vercel/
+
+# Environment variables
 .env
-.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Backend
 backend/__pycache__/
@@ -9,14 +23,71 @@ backend/**/__pycache__/
 backend/*.db
 backend/venv/
 backend/.env
-*.local
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Testing
+coverage/
+.nyc_output
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+.cache/
+
+# Local files
+*.local
 download/
 
-# Korean MVP documents
+# Korean MVP documents (프로젝트 특화)
 API Key*.docx
 *MVP*.docx
 *MVP*.xlsx
 *MVP*.pdf
+도사제공자료/
+*기획서*
+*설계도*
+
+# 3D Model cache (선택사항)
+# public/models/.cache/
+# *.glb.meta
+
+# AI generated files backup (선택사항)
+# .ai-backup/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
