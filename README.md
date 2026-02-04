@@ -1,99 +1,109 @@
-# SimVex 3D Viewer MVP - Hook 패턴 적용 버전
+# SimVex 3D Viewer
+
+**Blaybus 2026 해커톤 MVP**  
+SimVex 3D 뷰어 - 기계 조립/분해 시뮬레이션 교육 플랫폼
+
+---
 
 ## 🎯 프로젝트 개요
 
-**Blaybus 2026 MVP 해커톤**을 위한 SimVex 기반 3D 시뮬레이션 학습 플랫폼의 MVP 버전입니다.
+기계 구조를 3D로 시각화하고 조립/분해 과정을 학습할 수 있는 교육용 3D 뷰어입니다.
 
-### 🔥 **Hook 패턴 적용**
-
-이 프로젝트는 **3명의 개발자가 병렬로 작업할 수 있도록** Hook 패턴으로 리팩토링되었습니다.
-
----
-
-## 👥 팀 구성 및 역할 분담
-
-| 역할 | 담당자 | 작업 영역 | 파일 |
-|------|--------|----------|------|
-| **PM + 씬 초기화** | 본인 | Three.js 씬 설정 | `src/hooks/useSceneSetup.js` |
-| **카메라 컨트롤** | 도영님 | OrbitControls | `src/hooks/useOrbitControls.js` |
-| **애니메이션** | 상진님 | 분해도/하이라이트 | `src/hooks/useModelAnimations.js` |
-| **공통** | 전체 | 모델 로딩/인터랙션 | `src/hooks/useModelLoader.js` <br> `src/hooks/usePartInteraction.js` |
+### 주요 기능
+- 🔧 **3D 모델 뷰어**: Three.js 기반 실시간 3D 렌더링
+- 📦 **조립/분해 애니메이션**: 부품별 조립/분해 과정 시각화
+- 🎮 **인터랙티브 컨트롤**: 카메라 조작, 부품 선택, 정보 패널
+- 🧩 **다양한 기계 지원**: V4 엔진, 드론, 서스펜션, 로봇 암 등
 
 ---
 
-## 📂 폴더 구조 (Hook 패턴)
+## 🏗️ 기술 스택
+
+| 카테고리 | 기술 |
+|---------|------|
+| **Frontend** | React + TypeScript + Vite |
+| **3D Engine** | Three.js + React Three Fiber |
+| **State Management** | Zustand |
+| **Styling** | Tailwind CSS |
+| **Build & Deploy** | Vite + Vercel |
+
+---
+
+## 📁 프로젝트 구조 (Hook 패턴)
 
 ```
 simvex-3d-viewer/
 ├── src/
-│   ├── hooks/                    🆕 Hook 로직 분리
-│   │   ├── useSceneSetup.js      ← 본인 담당 (씬 설정)
-│   │   ├── useOrbitControls.js   ← 도영님 담당 (카메라)
-│   │   ├── useModelAnimations.js ← 상진님 담당 (애니메이션)
-│   │   ├── useModelLoader.js     ← 공통 (모델 로딩)
-│   │   └── usePartInteraction.js ← 공통 (클릭/호버)
+│   ├── hooks/                    # 커스텀 Hook 모음
+│   │   ├── useSceneSetup.ts        # 씬 설정 (조명, 카메라)
+│   │   ├── useOrbitControls.ts     # 카메라 컨트롤
+│   │   ├── useModelAnimations.ts   # 애니메이션 로직
+│   │   ├── useModelLoader.ts       # 모델 로딩
+│   │   └── usePartInteraction.ts   # 부품 상호작용
 │   │
 │   ├── components/
 │   │   └── Viewer/
-│   │       ├── Scene3D.tsx       🔄 수정됨 (Hook 사용)
-│   │       └── ModelGroup.tsx    🔄 수정됨 (Hook 사용)
+│   │       ├── Scene3D.tsx         # 메인 3D 씬
+│   │       └── ModelGroup.tsx      # 모델 그룹 관리
 │   │
-│   ├── stores/                   ✅ 유지 (Zustand)
-│   ├── utils/                    ✅ 유지
-│   └── types/                    ✅ 유지
+│   ├── stores/                     # Zustand 상태 관리
+│   ├── data/                       # 기계 데이터 (machineryData.ts)
+│   ├── utils/                      # 유틸리티 함수
+│   └── types/                      # TypeScript 타입 정의
 │
-├── public/models/                ✅ 유지 (GLB 파일)
-└── package.json
+└── public/models/                  # 3D 모델 파일 (GLB)
 ```
 
 ---
 
-## 🚀 빠른 시작
+## 🚀 시작하기
 
-### 1. 설치
-
+### 1. 의존성 설치
 ```bash
 npm install
 ```
 
-### 2. 개발 서버 실행
+### 2. 환경 변수 설정
+```bash
+cp .env.example .env
+# .env 파일에 OpenAI API Key 입력
+```
 
+### 3. 개발 서버 실행
 ```bash
 npm run dev
 ```
 
-### 3. 빌드
-
+### 4. 프로덕션 빌드
 ```bash
 npm run build
 ```
 
-### 4. 배포 (Vercel)
-
+### 5. 배포 (Vercel)
 ```bash
 vercel
 ```
 
 ---
 
-## 🎣 Hook 사용 방법
+## 🎨 Hook 패턴 아키텍처
 
-### **컴포넌트에서 Hook 조합하기**
+### Hook 사용 예시
 
-```tsx
+```typescript
 import { useSceneSetup } from '../../hooks/useSceneSetup';
 import { useOrbitControls } from '../../hooks/useOrbitControls';
 import { useModelAnimations } from '../../hooks/useModelAnimations';
 
 function MyComponent() {
-  // Hook을 "레고 블록"처럼 조립
+  // Hook으로 로직 분리
   const { lightingConfig } = useSceneSetup();
   const { controlsConfig } = useOrbitControls();
   const { calculateExplodePosition } = useModelAnimations(0.5, null);
 
   return (
     <Canvas>
-      {/* Hook에서 가져온 설정 사용 */}
+      {/* Hook에서 가져온 설정 적용 */}
       <ambientLight intensity={lightingConfig.ambient.intensity} />
       <OrbitControls {...controlsConfig} />
     </Canvas>
@@ -103,216 +113,115 @@ function MyComponent() {
 
 ---
 
-## 👨‍💻 개발 워크플로우
+## 🔧 개발 워크플로우
 
-### **병렬 작업 (3명 동시 개발)**
-
-#### **Day 1-3: 독립 작업**
-
+### 브랜치 전략
 ```bash
-# 본인 (PM)
+# 기능 개발
 git checkout -b feature/scene-setup
-# src/hooks/useSceneSetup.js 작업
-git commit -m "feat: 씬 초기화 Hook 구현"
+git commit -m "feat: 씬 설정 Hook 추가"
 git push origin feature/scene-setup
 
-# 도영님
-git checkout -b feature/orbit-controls
-# src/hooks/useOrbitControls.js 작업
-git commit -m "feat: OrbitControls Hook 구현"
-git push origin feature/orbit-controls
-
-# 상진님
-git checkout -b feature/animations
-# src/hooks/useModelAnimations.js 작업
-git commit -m "feat: 애니메이션 Hook 구현"
-git push origin feature/animations
+# 버그 수정
+git checkout -b fix/assembly-animation
+git commit -m "fix: Suspension 조립 오프셋 수정"
+git push origin fix/assembly-animation
 ```
 
-#### **Day 4: PR 생성 및 순차 머지**
-
-```bash
-# 순서대로 머지 (충돌 방지)
-1. 본인 → main
-2. 도영님 → main
-3. 상진님 → main
+### 커밋 컨벤션
 ```
-
-#### **Day 5: 통합 테스트**
-
-```bash
-# 통합 확인
-npm run dev
-# 테스트 후 배포
-vercel --prod
-```
-
----
-
-## 🔧 Hook 수정 가이드
-
-### **본인 담당: useSceneSetup.js**
-
-```javascript
-// 수정 예시: 조명 강도 변경
-export function useSceneSetup() {
-  return {
-    lightingConfig: {
-      ambient: { intensity: 0.7 },  // 0.5 → 0.7로 변경
-      // ...
-    }
-  };
-}
-```
-
-### **도영님 담당: useOrbitControls.js**
-
-```javascript
-// 수정 예시: 줌 속도 변경
-export function useOrbitControls() {
-  return {
-    controlsConfig: {
-      zoomSpeed: 1.2,  // 0.8 → 1.2로 변경
-      // ...
-    }
-  };
-}
-```
-
-### **상진님 담당: useModelAnimations.js**
-
-```javascript
-// 수정 예시: 분해 거리 변경
-const calculateExplodePosition = (originalPos, center, factor) => {
-  const explodeDistance = factor * 5;  // 3 → 5로 변경
-  // ...
-};
-```
-
----
-
-## ⚠️ 주의사항
-
-### 1. **Hook 규칙 준수**
-
-- Hook 이름은 `use`로 시작
-- Hook은 React 컴포넌트 또는 다른 Hook 내부에서만 호출
-- 조건문 안에서 Hook 호출 금지
-
-### 2. **충돌 방지**
-
-- 각자 **자신의 Hook 파일만 수정**
-- 공통 파일(`useModelLoader.js`, `usePartInteraction.js`)은 **사전 협의 후 수정**
-- 머지는 **순차적으로** (본인 → 도영님 → 상진님)
-
-### 3. **테스트**
-
-- 로컬에서 **독립적으로 테스트** 후 커밋
-- PR 생성 시 **Preview 배포 URL 확인**
-- 통합 후 **전체 기능 테스트**
-
----
-
-## 📊 진행 상황 체크리스트
-
-### Week 1 (2/1 - 2/7)
-
-- [ ] Day 1 (2/1): 역할 분담 확정, 개발 환경 세팅
-- [ ] Day 2 (2/2): Hook 파일 기본 구조 작성
-- [ ] Day 3 (2/3): Hook 로직 구현 완료
-- [ ] Day 4 (2/4): 로컬 테스트 및 PR 생성
-- [ ] Day 5 (2/5): 순차 머지 및 통합
-- [ ] Day 6 (2/6): 통합 테스트 및 버그 수정
-- [ ] Day 7 (2/7): UI 폴리싱
-
-### Week 2 (2/8 - 2/10)
-
-- [ ] Day 8 (2/8): AI 챗봇 통합
-- [ ] Day 9 (2/9): 최종 테스트 및 배포
-- [ ] Day 10 (2/10): 발표 자료 준비
-
----
-
-## 🆘 문제 해결
-
-### **Hook이 동작하지 않을 때**
-
-1. **콘솔 로그 확인**
-   ```javascript
-   console.log('✅ [useSceneSetup] 씨 초기화 완료');
-   ```
-
-2. **의존성 배열 확인**
-   ```javascript
-   useEffect(() => {
-     // ...
-   }, [dependency]); // 의존성 누락 확인
-   ```
-
-3. **Hook 반환값 확인**
-   ```javascript
-   const { lightingConfig } = useSceneSetup();
-   console.log(lightingConfig); // undefined 체크
-   ```
-
-### **Git 충돌 발생 시**
-
-```bash
-# 최신 main 가져오기
-git pull origin main
-
-# 충돌 해결 후
-git add .
-git commit -m "fix: 충돌 해결"
-git push
-```
-
----
-
-## 📝 커밋 메시지 규칙
-
-```
-feat: 새 기능 추가
+feat: 새로운 기능 추가
 fix: 버그 수정
 refactor: 코드 리팩토링
 docs: 문서 수정
 style: 코드 포맷팅
 test: 테스트 추가
-chore: 빌드/설정 변경
+chore: 빌드/환경 설정
 ```
 
-**예시:**
+**예시**:
 ```bash
-git commit -m "feat: useOrbitControls Hook 구현"
-git commit -m "fix: 분해 애니메이션 버그 수정"
+git commit -m "feat: Suspension 조립/분해 애니메이션 구현"
+git commit -m "fix: assemblyOffset 계산 로직 수정"
 git commit -m "refactor: useModelLoader 성능 최적화"
 ```
 
 ---
 
-## 🎉 완성도 목표
+## 📦 지원 기계 목록
 
-### Bronze (최소 완성)
-- ✅ 3D 모델 뷰어 (1개 모델)
-- ✅ 회전/줌 컨트롤
-- ✅ AI 챗봇 기본
-
-### Silver (권장)
-- ✅ Bronze +
-- ✅ 3-5개 모델 지원
-- ✅ 분해도 애니메이션
-- ✅ 부품 클릭/하이라이트
-
-### Gold (이상적)
-- ✅ Silver +
-- ✅ 물리 시뮬레이션
-- ✅ 워크플로우 차트
-- ✅ 학습 노트 기능
+| 기계 | 부품 수 | 조립/분해 | 상태 |
+|------|---------|-----------|------|
+| **Suspension** | 5개 | ✅ 완료 | 정상 작동 |
+| **Robot Gripper** | 7개 | 🚧 작업 중 | 개발 중 |
+| **Drone** | 8개 | 🚧 작업 중 | 개발 중 |
+| **V4 Engine** | 9개 | ⏳ 대기 | 계획 중 |
+| **Leaf Spring** | 7개 | ⏳ 대기 | 계획 중 |
+| **Machine Vice** | 12개 | ⏳ 대기 | 계획 중 |
+| **Robot Arm** | 5개 | ⏳ 대기 | 계획 중 |
 
 ---
 
-## 📞 연락처
+## 🎯 로드맵
 
-문제 발생 시 팀 채팅방에 공유해주세요!
+### Week 1 (2/1 - 2/7)
+- ✅ Day 1 (2/1): 프로젝트 초기 설정
+- ✅ Day 2 (2/2): Hook 패턴 구조 설계
+- ✅ Day 3 (2/3): 3D 뷰어 기본 기능 구현
+- ✅ Day 4 (2/4): .gitignore 및 환경 설정 개선 (v0.2.2)
+- 🚧 Day 5 (2/5): Suspension 조립/분해 기능 구현
+- ⏳ Day 6 (2/6): 추가 기계 조립/분해 구현
+- ⏳ Day 7 (2/7): UI/UX 개선
 
-**화이팅! 🔥**
+### Week 2 (2/8 - 2/10)
+- ⏳ Day 8 (2/8): AI 기능 통합
+- ⏳ Day 9 (2/9): 최종 테스트 및 버그 수정
+- ⏳ Day 10 (2/10): 해커톤 제출
+
+---
+
+## 🏆 해커톤 목표
+
+### Bronze (기본 목표)
+- ✅ 3D 뷰어 구현 (1개 기계)
+- ✅ 조립/분해 기능
+- ⏳ AI 채팅 기능
+
+### Silver (도전 목표)
+- Bronze +
+- ⏳ 3-5개 기계 지원
+- ⏳ 퀴즈/노트 기능
+
+### Gold (최종 목표)
+- Silver +
+- ⏳ 전체 기계 조립/분해 완성
+- ⏳ 고급 UI/UX
+
+---
+
+## 📄 라이센스
+
+MIT License
+
+---
+
+## 🤝 기여
+
+이 프로젝트는 Blaybus 2026 해커톤을 위한 MVP입니다.
+
+---
+
+**⚡ 현재 버전**: v0.2.2  
+**🚀 최종 목표**: 완전한 3D 기계 교육 플랫폼
+
+---
+
+## 🔗 관련 링크
+
+- [GitHub Repository](https://github.com/Jhun-bee/simvex_3Dviewer)
+- [CHANGELOG](./CHANGELOG.md)
+- [API Key 사용 가이드](./docs/API%20Key%20사용%20가이드.docx)
+
+---
+
+**Happy Coding! 🎉**

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.3] - 2026-02-04
+
+### Added
+- Suspension 부품 디버깅 코드 (콘솔에 Y축 위치/바운딩 박스 출력)
+
+### Changed
+- Suspension `assemblyOffset` 값 조정 (조립도에 맞게 부품 배치)
+  - ROD: `[0, 1, 0]`, SPRING: `[0, 2, 0]`, NIT: `[0, 6, 0]`, NUT: `[0, 8, 0]`
+- 카메라 컨트롤 마우스 버튼 매핑 변경
+  - 왼쪽 드래그: 패닝(화면 이동)
+  - 오른쪽 드래그: 회전
+
+### Fixed
+- `calculateExplodePosition` 함수에 `assemblyOffset` 지원 추가
+- 조립 상태(factor=0)에서 부품들이 올바른 위치에 배치되도록 수정
+
+---
+
 ## [v0.2.1] - 2026-02-04
 
 ### Added

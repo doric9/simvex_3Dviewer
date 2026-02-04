@@ -38,6 +38,68 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
   // 🎣 Hook 1: 모델 로딩 (공통)
   const { models, originalPositions, isLoading, error } = useModelLoader(machinery);
 
+  // 🐛 디버깅: Suspension 부품의 실제 Y축 위치 출력
+  useEffect(() => {
+    if (machinery.id === 'Suspension' && models.size > 0) {
+      console.log('\n🔍 ========== Suspension 부품 실제 위치 분석 ==========');
+
+      const suspensionParts = ['BASE', 'ROD', 'SPRING', 'NIT', 'NUT'];
+
+      suspensionParts.forEach(partName => {
+        const model = models.get(partName);
+        if (model) {
+          // 바운딩 박스로 실제 크기 계산
+          const box = new THREE.Box3().setFromObject(model);
+          const center = new THREE.Vector3();
+          const size = new THREE.Vector3();
+
+          box.getCenter(center);
+          box.getSize(size);
+
+          console.log(`📦 ${partName}:`, {
+            position: {
+              x: model.position.x.toFixed(2),
+              y: model.position.y.toFixed(2),  // ✅ 실제 Y축 위치
+              z: model.position.z.toFixed(2)
+            },
+            boundingBox: {
+              center: {
+                x: center.x.toFixed(2),
+                y: center.y.toFixed(2),
+                z: center.z.toFixed(2)
+              },
+              size: {
+                width: size.x.toFixed(2),
+                height: size.y.toFixed(2),  // ✅ 실제 높이
+                depth: size.z.toFixed(2)
+              }
+            }
+          });
+        } else {
+          console.warn(`⚠️ ${partName}: 모델을 찾을 수 없음`);
+        }
+      });
+
+      console.log('🔍 ===================================================\n');
+    }
+  }, [machinery.id, models]);
+
+  // 🐛 디버깅: explodeFactor 변경 시 현재 위치 추적
+  useEffect(() => {
+    if (machinery.id === 'Suspension' && models.size > 0) {
+      console.log(`\n📊 explodeFactor: ${(explodeFactor * 100).toFixed(0)}%`);
+
+      const suspensionParts = ['BASE', 'ROD', 'SPRING', 'NIT', 'NUT'];
+
+      suspensionParts.forEach(partName => {
+        const model = models.get(partName);
+        if (model) {
+          console.log(`  ${partName}: Y = ${model.position.y.toFixed(2)}`);
+        }
+      });
+    }
+  }, [machinery.id, models, explodeFactor]);
+
   // 📦 부품 선택 시 카메라 자동 포커스 효과
   useEffect(() => {
     if (selectedPart && models.has(selectedPart)) {
@@ -109,9 +171,17 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
       const partData = machinery.parts.find(p => p.name === partName);
       const explodeDirection = partData?.explodeDirection;
       const isGround = partData?.isGround;
+      const assemblyOffset = partData?.assemblyOffset;  // ✅ NEW: assemblyOffset 추가
 
-      // 분해 애니메이션 적용
-      const targetPos = calculateExplodePosition(originalPos, center, explodeFactor, explodeDirection, isGround);
+      // ✅ UPDATED: assemblyOffset 전달
+      const targetPos = calculateExplodePosition(
+        originalPos,
+        center,
+        explodeFactor,
+        explodeDirection,
+        isGround,
+        assemblyOffset  // ✅ NEW: 조립 위치 전달
+      );
       model.position.lerp(targetPos, 0.1);
 
       // 하이라이트 적용

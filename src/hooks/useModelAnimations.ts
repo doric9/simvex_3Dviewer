@@ -21,25 +21,39 @@ export function useModelAnimations(explodeFactor: number, selectedPart: string |
   }, [explodeFactor, selectedPart]);
 
   /**
-   * 분해 애니메이션 계산 함수
+   * 분해/조립 애니메이션 계산 함수 (개선됨)
    * @param originalPos - Original logical position (for direction calculation)
    * @param center - Center of all parts (fallback for radial explosion)
-   * @param factor - Explosion factor 0-1
+   * @param factor - Explosion factor 0-1 (0=assembled, 1=fully exploded)
    * @param explodeDirection - Optional explicit direction vector
    * @param isGround - If true, part stays fixed
+   * @param assemblyOffset - Assembled position offset (NEW!)
    */
   const calculateExplodePosition = (
     originalPos: THREE.Vector3,
     center: THREE.Vector3,
     factor: number,
     explodeDirection?: [number, number, number],
-    isGround?: boolean
+    isGround?: boolean,
+    assemblyOffset?: [number, number, number]  // ✅ NEW: 조립 위치
   ): THREE.Vector3 => {
     // Ground parts don't move
     if (isGround) {
       return new THREE.Vector3(0, 0, 0);
     }
 
+    // ✅ NEW: 조립 위치 계산 (assemblyOffset 우선, 없으면 originalPos 사용)
+    const assemblyPos = assemblyOffset
+      ? new THREE.Vector3(...assemblyOffset)
+      : originalPos.clone();
+
+    // ✅ NEW: factor === 0 이면 조립 상태 (assemblyPos 반환)
+    if (factor === 0) {
+      console.log(`📍 [조립] 부품이 조립 위치로 이동: [${assemblyPos.x}, ${assemblyPos.y}, ${assemblyPos.z}]`);
+      return assemblyPos;
+    }
+
+    // factor > 0: 분해 상태 계산
     let direction: THREE.Vector3;
 
     if (explodeDirection) {
@@ -58,7 +72,14 @@ export function useModelAnimations(explodeFactor: number, selectedPart: string |
     }
 
     const explodeDistance = factor * 150; // Scale for visibility
-    return direction.multiplyScalar(explodeDistance);
+    const explodeOffset = direction.multiplyScalar(explodeDistance);
+
+    // ✅ NEW: 조립 위치에서 explodeOffset만큼 이동
+    const explodedPos = assemblyPos.clone().add(explodeOffset);
+
+    console.log(`💥 [분해] factor=${factor.toFixed(2)}, 이동 거리: ${explodeDistance.toFixed(1)}`);
+
+    return explodedPos;
   };
 
   /**
