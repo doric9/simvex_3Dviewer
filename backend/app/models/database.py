@@ -1,11 +1,17 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
+
 from sqlalchemy import String, Integer, Float, Text, DateTime, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import NullPool, QueuePool
 
 from app.config import get_settings
+
+
+def _utc_now() -> datetime:
+    """Return current UTC time (timezone-aware)."""
+    return datetime.now(timezone.utc)
 
 
 class Base(DeclarativeBase):
@@ -16,8 +22,8 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    last_active: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+    last_active: Mapped[datetime] = mapped_column(DateTime, default=_utc_now, onupdate=_utc_now)
 
     # Relationships
     sessions: Mapped[list["LearningSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -30,7 +36,7 @@ class LearningSession(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String(50), ForeignKey("users.id"))
     machinery_id: Mapped[str] = mapped_column(String(50))
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
     ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     conversation_history: Mapped[dict] = mapped_column(JSON, default=list)
     topics_discussed: Mapped[list] = mapped_column(JSON, default=list)
@@ -50,7 +56,7 @@ class MachineryProgress(Base):
     quiz_correct: Mapped[int] = mapped_column(Integer, default=0)
     quiz_accuracy: Mapped[float] = mapped_column(Float, default=0.0)
     last_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now, onupdate=_utc_now)
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="progress")
@@ -67,7 +73,7 @@ class QuizAttempt(Base):
     selected_answer: Mapped[int] = mapped_column(Integer)
     correct_answer: Mapped[int] = mapped_column(Integer)
     is_correct: Mapped[bool] = mapped_column(Boolean)
-    attempted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    attempted_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
 
 
 class GeneratedQuiz(Base):
@@ -80,7 +86,7 @@ class GeneratedQuiz(Base):
     correct_answer: Mapped[int] = mapped_column(Integer)
     difficulty: Mapped[str] = mapped_column(String(20), default="medium")
     topic: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
 
 
 # Database engine and session

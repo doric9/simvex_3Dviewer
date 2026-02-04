@@ -15,8 +15,8 @@ class ExplainerAgent(BaseAgent):
         self,
         machinery_id: str,
         user_message: str,
-        conversation_history: list[dict] = None,
-        user_id: str = None,
+        conversation_history: list[dict] | None = None,
+        user_id: str | None = None,
     ) -> tuple[str, list[str]]:
         """
         Explain machinery concepts to the user.

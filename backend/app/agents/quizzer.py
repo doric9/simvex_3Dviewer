@@ -32,9 +32,9 @@ class QuizzerAgent(BaseAgent):
         machinery_id: str,
         count: int = 3,
         quiz_accuracy: float = 0.5,
-        exclude_ids: list[str] = None,
-        topics_learned: list[str] = None,
-        user_id: str = None,
+        exclude_ids: list[str] | None = None,
+        topics_learned: list[str] | None = None,
+        user_id: str | None = None,
     ) -> list[dict]:
         """
         Generate quiz questions for a machinery.
@@ -52,7 +52,6 @@ class QuizzerAgent(BaseAgent):
         """
         exclude_ids = exclude_ids or []
         topics_learned = topics_learned or []
-        self._current_user_id = user_id  # Store for use in _generate_with_llm
 
         # Get questions from the quiz bank
         bank_questions = get_questions_by_machinery(machinery_id)
@@ -84,7 +83,7 @@ class QuizzerAgent(BaseAgent):
         remaining = count - len(questions)
         if remaining > 0:
             generated = await self._generate_with_llm(
-                machinery_id, remaining, quiz_accuracy, topics_learned
+                machinery_id, remaining, quiz_accuracy, topics_learned, user_id
             )
             questions.extend(generated)
 
@@ -116,7 +115,8 @@ class QuizzerAgent(BaseAgent):
         machinery_id: str,
         count: int,
         quiz_accuracy: float,
-        topics_learned: list[str] = None,
+        topics_learned: list[str] | None = None,
+        user_id: str | None = None,
     ) -> list[dict]:
         """Generate questions using LLM, focused on learned topics."""
         # Determine difficulty based on accuracy
@@ -148,8 +148,6 @@ class QuizzerAgent(BaseAgent):
             user_message=prompt,
         )
 
-        # Use rate-limited LLM invocation
-        user_id = getattr(self, '_current_user_id', None)
         response = await self._invoke_llm(messages, user_id=user_id)
 
         # Parse JSON response - handle both string and Responses API formats
@@ -178,7 +176,7 @@ class QuizzerAgent(BaseAgent):
         options: list[str],
         selected_answer: int,
         correct_answer: int,
-        user_id: str = None,
+        user_id: str | None = None,
     ) -> str:
         """
         Grade an answer and provide feedback.

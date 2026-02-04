@@ -27,8 +27,7 @@ async def chat_with_explainer(
     understand the machinery's structure and operation.
     """
     # Validate machinery exists
-    machinery = get_machinery(machinery_id)
-    if not machinery:
+    if not get_machinery(machinery_id):
         raise HTTPException(status_code=404, detail=f"Machinery '{machinery_id}' not found")
 
     try:

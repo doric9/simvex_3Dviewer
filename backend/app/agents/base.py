@@ -11,7 +11,7 @@ from app.utils.rate_limiter import get_rate_limiter
 class BaseAgent(ABC):
     """Base class for all AI agents."""
 
-    def __init__(self, model: str = None, temperature: float = 0.7):
+    def __init__(self, model: str | None = None, temperature: float = 0.7):
         settings = get_settings()
         # Use model from settings if not specified
         model = model or settings.openai_model
@@ -31,7 +31,7 @@ class BaseAgent(ABC):
         """Invoke the agent with input."""
         pass
 
-    async def _invoke_llm(self, messages: list, user_id: str = None):
+    async def _invoke_llm(self, messages: list, user_id: str | None = None):
         """
         Invoke LLM with rate limiting and retry logic.
 
@@ -51,7 +51,7 @@ class BaseAgent(ABC):
         self,
         system_prompt: str,
         user_message: str,
-        conversation_history: list[dict] = None,
+        conversation_history: list[dict] | None = None,
     ) -> list:
         """Build message list for LLM."""
         messages = [SystemMessage(content=system_prompt)]

@@ -1,6 +1,6 @@
 """Progress tracking service."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,7 +32,7 @@ class ProgressService:
         result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if user:
-            user.last_active = datetime.utcnow()
+            user.last_active = datetime.now(timezone.utc)
             await self.db.commit()
 
     async def get_machinery_progress(
@@ -114,7 +114,7 @@ class ProgressService:
             if progress.quiz_attempts > 0
             else 0.0
         )
-        progress.last_quiz_at = datetime.utcnow()
+        progress.last_quiz_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         await self.db.refresh(attempt)
@@ -179,7 +179,7 @@ class ProgressService:
         session = result.scalar_one_or_none()
 
         if session:
-            session.ended_at = datetime.utcnow()
+            session.ended_at = datetime.now(timezone.utc)
             await self.db.commit()
             await self.db.refresh(session)
 

@@ -83,7 +83,7 @@ class QuizService:
         options: list[str],
         selected_answer: int,
         correct_answer: int,
-        user_id: str = None,
+        user_id: str | None = None,
     ) -> tuple[bool, str]:
         """
         Grade an answer and get feedback.

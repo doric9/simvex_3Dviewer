@@ -32,8 +32,7 @@ async def generate_quiz(
     Uses adaptive difficulty based on user's past performance.
     """
     # Validate machinery exists
-    machinery = get_machinery(machinery_id)
-    if not machinery:
+    if not get_machinery(machinery_id):
         raise HTTPException(status_code=404, detail=f"Machinery '{machinery_id}' not found")
 
     try:
@@ -80,8 +79,7 @@ async def answer_quiz(
     Records the attempt for progress tracking if user_id is provided.
     """
     # Validate machinery exists
-    machinery = get_machinery(machinery_id)
-    if not machinery:
+    if not get_machinery(machinery_id):
         raise HTTPException(status_code=404, detail=f"Machinery '{machinery_id}' not found")
 
     try:
