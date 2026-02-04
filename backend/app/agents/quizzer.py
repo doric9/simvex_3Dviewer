@@ -8,6 +8,7 @@ from app.agents.prompts import (
     QUIZZER_SYSTEM_PROMPT,
     QUIZ_GENERATION_PROMPT,
     QUIZ_FEEDBACK_PROMPT,
+    QUIZ_TOPICS_INSTRUCTION,
 )
 from app.data.machinery import get_machinery_context
 from app.data.quiz_bank import get_questions_by_machinery
@@ -17,7 +18,10 @@ class QuizzerAgent(BaseAgent):
     """Agent that generates quizzes and provides feedback in Korean."""
 
     def __init__(self):
+        # Higher token limit for quiz generation (needs reasoning + JSON output)
         super().__init__(temperature=0.7)
+        # Override max_tokens for quiz generation
+        self.llm.max_tokens = 2000
 
     async def invoke(self, *args, **kwargs) -> str:
         """Generic invoke - use specific methods instead."""
@@ -29,6 +33,7 @@ class QuizzerAgent(BaseAgent):
         count: int = 3,
         quiz_accuracy: float = 0.5,
         exclude_ids: list[str] = None,
+        topics_learned: list[str] = None,
     ) -> list[dict]:
         """
         Generate quiz questions for a machinery.
@@ -38,19 +43,29 @@ class QuizzerAgent(BaseAgent):
             count: Number of questions to generate
             quiz_accuracy: User's current accuracy (0-1) for adaptive difficulty
             exclude_ids: Question IDs to exclude (already answered)
+            topics_learned: Topics the user has discussed with the Explainer
 
         Returns:
             List of quiz questions
         """
         exclude_ids = exclude_ids or []
+        topics_learned = topics_learned or []
 
-        # First, get questions from the quiz bank
+        # Get questions from the quiz bank
         bank_questions = get_questions_by_machinery(machinery_id)
         available_bank_questions = [
             q for q in bank_questions if q["id"] not in exclude_ids
         ]
 
         questions = []
+
+        # If user has learned topics, prioritize relevant bank questions
+        if topics_learned:
+            # Sort bank questions: topic-relevant ones first
+            relevant, other = self._split_by_topic_relevance(
+                available_bank_questions, topics_learned
+            )
+            available_bank_questions = relevant + other
 
         # Use bank questions first
         for q in available_bank_questions[:count]:
@@ -66,19 +81,41 @@ class QuizzerAgent(BaseAgent):
         remaining = count - len(questions)
         if remaining > 0:
             generated = await self._generate_with_llm(
-                machinery_id, remaining, quiz_accuracy
+                machinery_id, remaining, quiz_accuracy, topics_learned
             )
             questions.extend(generated)
 
         return questions[:count]
+
+    def _split_by_topic_relevance(
+        self, questions: list[dict], topics: list[str]
+    ) -> tuple[list[dict], list[dict]]:
+        """Split questions into topic-relevant and other."""
+        relevant = []
+        other = []
+        topics_lower = [t.lower() for t in topics]
+
+        for q in questions:
+            question_text = q["question"].lower()
+            options_text = " ".join(q["options"]).lower()
+            combined = f"{question_text} {options_text}"
+
+            # Check if any topic appears in the question
+            if any(topic in combined for topic in topics_lower):
+                relevant.append(q)
+            else:
+                other.append(q)
+
+        return relevant, other
 
     async def _generate_with_llm(
         self,
         machinery_id: str,
         count: int,
         quiz_accuracy: float,
+        topics_learned: list[str] = None,
     ) -> list[dict]:
-        """Generate questions using LLM."""
+        """Generate questions using LLM, focused on learned topics."""
         # Determine difficulty based on accuracy
         if quiz_accuracy < 0.4:
             difficulty = "쉬움 (기본 개념 위주)"
@@ -89,10 +126,18 @@ class QuizzerAgent(BaseAgent):
 
         machinery_context = get_machinery_context(machinery_id)
 
+        # Add topics instruction if user has learned topics
+        topics_instruction = ""
+        if topics_learned:
+            topics_instruction = QUIZ_TOPICS_INSTRUCTION.format(
+                topics=", ".join(topics_learned)
+            )
+
         prompt = QUIZ_GENERATION_PROMPT.format(
             count=count,
             machinery_context=machinery_context,
             difficulty=difficulty,
+            topics_instruction=topics_instruction,
         )
 
         messages = self._build_messages(
@@ -102,20 +147,22 @@ class QuizzerAgent(BaseAgent):
 
         response = await self.llm.ainvoke(messages)
 
-        # Parse JSON response
+        # Parse JSON response - handle both string and Responses API formats
         try:
-            # Extract JSON array from response
-            content = self._extract_text(response.content)
-            # Find JSON array in response
+            content = ""
+            if hasattr(response, 'text') and response.text:
+                content = response.text
+            elif hasattr(response, 'content'):
+                content = self._extract_text(response.content)
+
             json_match = re.search(r'\[[\s\S]*\]', content)
             if json_match:
                 questions = json.loads(json_match.group())
-                # Add IDs and machinery_id to generated questions
                 for i, q in enumerate(questions):
                     q["id"] = f"gen_{machinery_id}_{i}_{hash(q['question']) % 10000}"
                     q["machinery_id"] = machinery_id
                 return questions
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, Exception):
             pass
 
         return []

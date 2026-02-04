@@ -38,7 +38,7 @@ QUIZ_GENERATION_PROMPT = """다음 기계에 대한 4지선다 퀴즈 문제를 
 {machinery_context}
 
 난이도: {difficulty}
-
+{topics_instruction}
 각 문제는 다음 JSON 형식으로 작성해주세요:
 {{
   "question": "질문",
@@ -48,6 +48,11 @@ QUIZ_GENERATION_PROMPT = """다음 기계에 대한 4지선다 퀴즈 문제를 
 }}
 
 {count}개의 문제를 JSON 배열로 반환해주세요.
+"""
+
+QUIZ_TOPICS_INSTRUCTION = """
+**중요**: 학생이 최근 다음 주제들에 대해 학습했습니다: {topics}
+이 주제들을 중심으로 퀴즈를 생성해주세요. 학생이 배운 내용을 확인할 수 있는 문제를 만들어주세요.
 """
 
 QUIZ_FEEDBACK_PROMPT = """학생이 다음 퀴즈에 답했습니다:

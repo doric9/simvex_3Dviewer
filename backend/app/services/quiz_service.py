@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import GeneratedQuiz, QuizAttempt
+from app.models.database import GeneratedQuiz, QuizAttempt, MachineryProgress
 from app.agents.quizzer import QuizzerAgent
 
 
@@ -25,10 +25,12 @@ class QuizService:
         Generate quiz questions for a machinery.
 
         Uses adaptive difficulty based on user's past performance.
+        Customizes questions based on topics discussed with Explainer.
         """
-        # Get user's accuracy for this machinery if user_id provided
+        # Get user's accuracy and topics for this machinery if user_id provided
         quiz_accuracy = 0.5  # Default to medium difficulty
         exclude_ids = []
+        topics_learned = []
 
         if user_id:
             # Get previously answered questions
@@ -52,12 +54,24 @@ class QuizService:
                 correct = sum(1 for a in attempts if a.is_correct)
                 quiz_accuracy = correct / len(attempts)
 
-        # Generate questions
+            # Get topics learned from conversations with Explainer
+            result = await self.db.execute(
+                select(MachineryProgress).where(
+                    MachineryProgress.user_id == user_id,
+                    MachineryProgress.machinery_id == machinery_id,
+                )
+            )
+            progress = result.scalar_one_or_none()
+            if progress and progress.topics_learned:
+                topics_learned = progress.topics_learned
+
+        # Generate questions customized to learned topics
         questions = await self.quizzer.generate_quiz(
             machinery_id=machinery_id,
             count=count,
             quiz_accuracy=quiz_accuracy,
             exclude_ids=exclude_ids,
+            topics_learned=topics_learned,
         )
 
         return questions
