@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+"""Development server with single worker and hot reload."""
+
+import uvicorn
+
+
+def main():
+    """Run the development server."""
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="debug",
+    )
+
+
+if __name__ == "__main__":
+    main()
