@@ -7,7 +7,7 @@
  * - Three.js 로직은 모두 Hook으로 분리
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Machinery } from '../../types';
@@ -27,10 +27,46 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
   const groupRef = useRef<THREE.Group>(null);
 
   // Zustand Store
-  const { explodeFactor, selectedPart, setSelectedPart } = useViewerStore();
+  const {
+    explodeFactor,
+    selectedPart,
+    setSelectedPart,
+    setCameraPosition,
+    setCameraTarget
+  } = useViewerStore();
 
   // 🎣 Hook 1: 모델 로딩 (공통)
   const { models, originalPositions, isLoading, error } = useModelLoader(machinery);
+
+  // 📦 부품 선택 시 카메라 자동 포커스 효과
+  useEffect(() => {
+    if (selectedPart && models.has(selectedPart)) {
+      const model = models.get(selectedPart);
+      if (!model) return;
+
+      // 1. 부품의 바운딩 박스 계산
+      const box = new THREE.Box3().setFromObject(model);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z);
+
+      // 2. 적절한 카메라 거리 계산 (부품 크기의 약 2~3배)
+      const distance = Math.max(maxDim * 2.5, 30);
+
+      console.log(`🎯 [ModelGroup] '${selectedPart}' 포커스 계산:`, center, distance);
+
+      // 3. 스토어 업데이트 -> CameraController가 lerp 애니메이션 수행
+      setCameraTarget([center.x, center.y, center.z]);
+      setCameraPosition([
+        center.x + distance * 0.7,
+        center.y + distance * 0.7,
+        center.z + distance * 0.7
+      ]);
+    }
+  }, [selectedPart, models, setCameraTarget, setCameraPosition]);
 
   // 🎣 Hook 2: 애니메이션 (상진님)
   const {
@@ -121,11 +157,24 @@ export default function ModelGroup({ machinery, physicsEnabled }: ModelGroupProp
   );
 }
 
+import { useBox } from '@react-three/cannon';
+import type { ThreeEvent } from '@react-three/fiber';
+
+interface PhysicsPartProps {
+  partName: string;
+  model: THREE.Object3D;
+  originalPos: THREE.Vector3;
+  machinery: Machinery;
+  physicsEnabled: boolean;
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerOver: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}
+
 // Sub-component to safely use physics hooks for each part
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerOut }: any) {
-  // Only use physics hook if visualization is physics-enabled. 
-  // BUT we cannot conditionally call hooks. 
+function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerOut }: PhysicsPartProps) {
+  // Only use physics hook if visualization is physics-enabled.
+  // BUT we cannot conditionally call hooks.
   // We must rely on the PhysicsWrapper to handle the simulation context, but useBox MUST run.
   // If physicsEnabled is false, useBox might throw if not inside <Physics>.
   // So we need two different components or a robust way to handle it.
@@ -148,16 +197,20 @@ function PhysicsPart({ model, physicsEnabled, onClick, onPointerOver, onPointerO
   return <PhysicsPartBody model={model} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut} />;
 }
 
-import { useBox } from '@react-three/cannon';
+interface PhysicsPartBodyProps {
+  model: THREE.Object3D;
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerOver: (e: ThreeEvent<PointerEvent>) => void;
+  onPointerOut: (e: ThreeEvent<PointerEvent>) => void;
+}
 
-function PhysicsPartBody({ model, onClick, onPointerOver, onPointerOut }: any) {
+function PhysicsPartBody({ model, onClick, onPointerOver, onPointerOut }: PhysicsPartBodyProps) {
   // Basic box shape for all parts for now to enable collision
   // Mass 1 makes it dynamic (falls). Mass 0 would be static.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ref] = useBox(() => ({ mass: 1, position: [model.position.x, model.position.y, model.position.z] }));
 
   // Sync React Three Fiber model with Physics body
-  // We clone the model to avoid mutating the original shared resource improperly if needed, 
+  // We clone the model to avoid mutating the original shared resource improperly if needed,
   // but here we just attach the primitive to the ref.
   return (
     <primitive

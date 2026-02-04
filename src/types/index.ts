@@ -25,6 +25,7 @@ export interface ViewerState {
   selectedPart: string | null;
   explodeFactor: number;
   cameraPosition: [number, number, number];
+  cameraTarget: [number, number, number];
   zoom: number;
   physicsEnabled: boolean;
   resetTrigger?: number;
