@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.1] - 2026-02-05
+
+### Changed
+- CHANGELOG.md 업데이트 (v0.3.0 내용 추가)
+- README.md 백엔드 설정 가이드 추가
+- package.json 버전 업데이트
+
+---
+
+## [v0.3.0] - 2026-02-05
+
+### Added
+- **AI Teacher Backend** (FastAPI 기반)
+  - `/api/v1/chat/{machinery_id}` - AI 챗봇 API
+  - `/api/v1/quiz/{machinery_id}/generate` - 퀴즈 생성 API
+  - `/api/v1/quiz/{machinery_id}/answer` - 답변 제출 API
+  - `/api/v1/progress/{user_id}` - 학습 진도 API
+- **LangChain 에이전트**
+  - ExplainerAgent: 기계 개념 설명
+  - QuizzerAgent: 적응형 퀴즈 생성
+- **데이터베이스 지원**
+  - SQLite (개발용)
+  - PostgreSQL (운영용)
+  - Alembic 마이그레이션
+- **성능 최적화**
+  - Rate Limiting (글로벌 5개, 사용자별 분당 10회)
+  - Multi-worker 지원 (20-100명 동시 접속)
+
+### Changed
+- `src/utils/aiService.ts` - 백엔드 API 호출 방식으로 변경
+- `.env.example` - 백엔드 URL 환경 변수 추가
+
+### Security
+- API Key가 프론트엔드에서 백엔드로 이동 (보안 강화)
+
+---
+
 ## [v0.2.3] - 2026-02-04
 
 ### Added

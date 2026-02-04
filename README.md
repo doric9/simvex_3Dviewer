@@ -66,20 +66,43 @@ npm install
 ### 2. 환경 변수 설정
 ```bash
 cp .env.example .env
-# .env 파일에 OpenAI API Key 입력
+# .env 파일에 API URL 및 필요한 설정 입력
 ```
 
-### 3. 개발 서버 실행
+### 3. 개발 서버 실행 (프론트엔드)
 ```bash
 npm run dev
 ```
 
-### 4. 프로덕션 빌드
+### 4. 백엔드 서버 실행 (AI 기능 사용 시 필수)
+```bash
+# 백엔드 폴더로 이동
+cd backend
+
+# 가상환경 생성 및 활성화
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 의존성 설치
+pip install -r requirements.txt
+
+# 환경 변수 설정
+cp .env.example .env
+# .env에 OPENAI_API_KEY 입력
+
+# 데이터베이스 초기화
+alembic upgrade head
+
+# 개발 서버 실행
+python run_dev.py
+```
+
+### 5. 프로덕션 빌드
 ```bash
 npm run build
 ```
 
-### 5. 배포 (Vercel)
+### 6. 배포 (Vercel)
 ```bash
 vercel
 ```
@@ -211,7 +234,7 @@ MIT License
 
 ---
 
-**⚡ 현재 버전**: v0.2.2  
+**⚡ 현재 버전**: v0.3.1  
 **🚀 최종 목표**: 완전한 3D 기계 교육 플랫폼
 
 ---
