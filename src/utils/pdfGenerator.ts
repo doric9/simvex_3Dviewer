@@ -13,7 +13,6 @@ export async function generatePDF(
   notes: string,
   aiConversation: { role: string; content: string }[]
 ): Promise<void> {
-  console.log('[PDF] generatePDF started');
   const pdf = new jsPDF({
     orientation: 'p',
     unit: 'mm',
@@ -22,13 +21,10 @@ export async function generatePDF(
   });
 
   try {
-    console.log('[PDF] Registering NanumGothic font...');
     pdf.addFileToVFS('NanumGothic-Regular.ttf', KOREAN_FONT_BASE64);
     pdf.addFont('NanumGothic-Regular.ttf', 'NanumGothic', 'normal');
-    // Map bold to the same font for now to avoid warnings
     pdf.addFont('NanumGothic-Regular.ttf', 'NanumGothic', 'bold');
     pdf.setFont('NanumGothic');
-    console.log('[PDF] Font registered.');
   } catch (error) {
     console.error('[PDF] Font registration failed:', error);
   }
@@ -53,29 +49,44 @@ export async function generatePDF(
     const canvas = viewerElement.querySelector('canvas') as HTMLCanvasElement;
 
     if (canvas) {
-      // Force a render to ensure the canvas has content
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = pageWidth - margin * 2;
 
-      // Calculate height maintaining aspect ratio
-      const aspectRatio = canvas.height / canvas.width;
-      const imgHeight = imgWidth * aspectRatio;
-
-      // Check if we need a new page
-      if (yPosition + imgHeight > pageHeight - margin) {
-        pdf.addPage();
-        yPosition = margin;
+      // Detect blank canvas: render to a tiny offscreen canvas and check if all pixels are empty
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = 1;
+      testCanvas.height = 1;
+      const testCtx = testCanvas.getContext('2d');
+      let isBlank = true;
+      if (testCtx) {
+        const img = new Image();
+        await new Promise<void>((resolve) => {
+          img.onload = () => {
+            testCtx.drawImage(img, 0, 0, 1, 1);
+            resolve();
+          };
+          img.onerror = () => resolve();
+          img.src = imgData;
+        });
+        const pixel = testCtx.getImageData(0, 0, 1, 1).data;
+        isBlank = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0;
       }
 
-      pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, Math.min(imgHeight, 100));
-      yPosition += Math.min(imgHeight, 100) + 10;
+      if (!isBlank) {
+        const imgWidth = pageWidth - margin * 2;
+        const aspectRatio = canvas.height / canvas.width;
+        const imgHeight = imgWidth * aspectRatio;
+
+        if (yPosition + imgHeight > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, Math.min(imgHeight, 100));
+        yPosition += Math.min(imgHeight, 100) + 10;
+      }
     }
   } catch (error) {
     console.error('3D 캡처 실패:', error);
-    // Continue without image
-    pdf.setFontSize(10);
-    pdf.text('[3D 뷰어 캡처를 사용할 수 없습니다]', margin, yPosition);
-    yPosition += 10;
   }
 
   // Notes Section
@@ -151,13 +162,9 @@ export async function generatePDF(
   }
 
   // Download PDF
-  console.log('[PDF] Saving file...');
   try {
-    const pdfOutput = pdf.output();
-    console.log('[PDF] Output prefix:', pdfOutput.substring(0, 50));
     const timestamp = new Date().toISOString().slice(0, 10);
     pdf.save(`SIMVEX_${machineryName}_${timestamp}.pdf`);
-    console.log('[PDF] Save command completed.');
   } catch (saveError) {
     console.error('[PDF] Save failed:', saveError);
   }
@@ -174,7 +181,6 @@ export async function generateStudySummaryPDF(
   aiMessages: AIMessage[],
   progress: MachineryProgress | null
 ): Promise<void> {
-  console.log('[PDF] generateStudySummaryPDF started');
   const pdf = new jsPDF({
     orientation: 'p',
     unit: 'mm',
@@ -183,14 +189,12 @@ export async function generateStudySummaryPDF(
   });
 
   try {
-    console.log('[PDF] Registering NanumGothic font for summary...');
     pdf.addFileToVFS('NanumGothic-Regular.ttf', KOREAN_FONT_BASE64);
     pdf.addFont('NanumGothic-Regular.ttf', 'NanumGothic', 'normal');
     pdf.addFont('NanumGothic-Regular.ttf', 'NanumGothic', 'bold');
     pdf.setFont('NanumGothic');
-    console.log('[PDF] Font registered for summary.');
   } catch (error) {
-    console.error('[PDF] Font registration failed for summary:', error);
+    console.error('[PDF] Font registration failed:', error);
   }
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -262,14 +266,35 @@ export async function generateStudySummaryPDF(
     try {
       const canvas = viewerElement.querySelector('canvas') as HTMLCanvasElement;
       if (canvas) {
-        checkNewPage(80);
         const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth - margin * 2;
-        const aspectRatio = canvas.height / canvas.width;
-        const imgHeight = Math.min(imgWidth * aspectRatio, 70);
 
-        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10;
+        // Detect blank canvas: render to a tiny offscreen canvas and check if all pixels are empty
+        const testCanvas = document.createElement('canvas');
+        testCanvas.width = 1;
+        testCanvas.height = 1;
+        const testCtx = testCanvas.getContext('2d');
+        if (testCtx) {
+          const img = new Image();
+          await new Promise<void>((resolve) => {
+            img.onload = () => {
+              testCtx.drawImage(img, 0, 0, 1, 1);
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = imgData;
+          });
+          const pixel = testCtx.getImageData(0, 0, 1, 1).data;
+          const isBlank = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0;
+
+          if (!isBlank) {
+            checkNewPage(80);
+            const imgWidth = pageWidth - margin * 2;
+            const aspectRatio = canvas.height / canvas.width;
+            const imgHeight = Math.min(imgWidth * aspectRatio, 70);
+            pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 10;
+          }
+        }
       }
     } catch (error) {
       console.error('3D capture failed:', error);
@@ -409,14 +434,10 @@ export async function generateStudySummaryPDF(
   }
 
   // Download PDF
-  console.log('[PDF] Saving summary PDF...');
   try {
-    const pdfOutput = pdf.output();
-    console.log('[PDF] Summary output prefix:', pdfOutput.substring(0, 50));
     const timestamp = new Date().toISOString().slice(0, 10);
     pdf.save(`SIMVEX_학습요약_${machineryName}_${timestamp}.pdf`);
-    console.log('[PDF] Summary save call finished.');
   } catch (saveError) {
-    console.error('[PDF] Summary save failed:', saveError);
+    console.error('[PDF] Save failed:', saveError);
   }
 }

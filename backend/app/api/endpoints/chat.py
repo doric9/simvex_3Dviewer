@@ -73,9 +73,9 @@ async def chat_with_explainer(
                 await cache_service.cache_answer(
                     machinery_id, request.message, response_text
                 )
-            except Exception as cache_error:
+            except Exception:
                 # Don't fail the request if caching fails
-                print(f"Cache error (non-critical): {cache_error}")
+                pass
 
         # Track progress if user_id provided
         if request.user_id and topics:
