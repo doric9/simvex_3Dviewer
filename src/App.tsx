@@ -4,6 +4,7 @@ import Header from './components/Layout/Header';
 import MachineryGrid from './components/Home/MachineryGrid';
 import ViewerPage from './components/Viewer/ViewerPage';
 import FlowchartPage from './components/Flowchart/FlowchartPage';
+import ControlsHint from './components/UI/ControlsHint';
 
 type Page = 'home' | 'viewer' | 'flowchart';
 
@@ -70,7 +71,10 @@ function App() {
           <MachineryGrid onSelect={handleSelectMachinery} />
         )}
         {currentPage === 'viewer' && selectedMachinery && (
-          <ViewerPage machineryId={selectedMachinery} />
+          <>
+            <ViewerPage machineryId={selectedMachinery} />
+            <ControlsHint />
+          </>
         )}
         {currentPage === 'flowchart' && (
           <FlowchartPage />
