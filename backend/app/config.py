@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"  # Model for embeddings
 
     # Database
-    database_url: str = "sqlite+aiosqlite:///./simvex.db"
+    database_url: str = "sqlite+aiosqlite:///./backend/simvex.db"
     db_pool_size: int = 5  # PostgreSQL connection pool size
     db_max_overflow: int = 10  # Max connections above pool_size
 
