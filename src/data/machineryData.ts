@@ -90,7 +90,7 @@ export const machineryData: Record<string, Machinery> = {
         role: '로드',
         position: [0, 20, 0],
         explodeDirection: [0, 1, 0],
-        assemblyOffset: [0, 1, 0]  // [0,5,0] → [0,1,0]
+        assemblyOffset: [0, 3, 0]  // v0.3.2: 부품 간격 확보
       },
       // ✅ SPRING: ROD 바로 위 (스프링이 ROD를 감쌈)
       {
@@ -100,7 +100,7 @@ export const machineryData: Record<string, Machinery> = {
         role: '스프링',
         position: [0, 40, 0],
         explodeDirection: [0, 1, 0],
-        assemblyOffset: [0, 2, 0]  // [0,12,0] → [0,2,0]
+        assemblyOffset: [0, 6, 0]  // v0.3.2: ROD 높이 고려
       },
       // ✅ NIT: 스프링 위 (빨간 조정 칼라)
       {
@@ -110,7 +110,7 @@ export const machineryData: Record<string, Machinery> = {
         role: '빨간 기어',
         position: [0, 60, 0],
         explodeDirection: [0, 1, 0],
-        assemblyOffset: [0, 6, 0]  // [0,18,0] → [0,6,0]
+        assemblyOffset: [0, 12, 0]  // v0.3.2: SPRING 높이 고려
       },
       // ✅ NUT: 맨 위 (상단 캡)
       {
@@ -120,7 +120,7 @@ export const machineryData: Record<string, Machinery> = {
         role: '너트',
         position: [0, 80, 0],
         explodeDirection: [0, 1, 0],
-        assemblyOffset: [0, 8, 0]  // [0,22,0] → [0,8,0]
+        assemblyOffset: [0, 16, 0]  // v0.3.2: NIT 높이 고려
       },
     ],
   },

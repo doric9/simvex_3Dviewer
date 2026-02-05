@@ -95,7 +95,7 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       </Suspense>
 
       {/* 카메라 컨트롤 (OrbitControls 대신 CameraControls 사용) */}
-      {/* 마우스 조작: 왼쪽 드래그=패닝(이동), 오른쪽 드래그=회전, 휠=줌 */}
+      {/* 마우스 조작: 왼쪽 드래그=패닝(이동), 우클릭 드래그=회전, 휠=줌 */}
       <DreiCameraControls
         ref={controlsRef}
         minDistance={controlsConfig.minDistance}
@@ -104,15 +104,16 @@ export default function Scene3D({ machinery }: Scene3DProps) {
         maxPolarAngle={controlsConfig.maxPolarAngle}
         azimuthRotateSpeed={controlsConfig.rotateSpeed}
         polarRotateSpeed={controlsConfig.rotateSpeed}
-        truckSpeed={controlsConfig.panSpeed * 2}  // 패닝 속도 증가
+        truckSpeed={controlsConfig.panSpeed * 2}
         dollySpeed={controlsConfig.zoomSpeed}
+        dollyToCursor={true}
         makeDefault
-        // 마우스 버튼 매핑 변경
+        // 마우스 버튼 매핑: 좌=이동, 우=회전, 휠=줌
         mouseButtons={{
-          left: 2,    // 왼쪽 버튼: TRUCK (패닝/이동)
-          middle: 8,  // 가운데 버튼: DOLLY (줌)
-          right: 1,   // 오른쪽 버튼: ROTATE (회전)
-          wheel: 8    // 휠: DOLLY (줌)
+          left: 2,     // TRUCK (패닝)
+          middle: 8,   // DOLLY (줌)
+          right: 1,    // ROTATE (회전)
+          wheel: 16    // ZOOM (줌) - DOLLY(8) 대신 ZOOM(16) 사용
         }}
       />
 
