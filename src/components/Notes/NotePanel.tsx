@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Save, Plus, Trash2, FileText, Tag, Lightbulb } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Save, Plus, Trash2, FileText, Tag, Lightbulb, Loader2 } from 'lucide-react';
 import { useNoteStore } from '../../stores/noteStore';
 import { useViewerStore } from '../../stores/viewerStore';
 
@@ -15,8 +15,13 @@ const noteTemplates = [
 ];
 
 export default function NotePanel({ machineryId }: NotePanelProps) {
-  const { addNote, updateNote, deleteNote, getNotesByMachinery } = useNoteStore();
+  const { addNote, updateNote, deleteNote, getNotesByMachinery, loadNotes, isLoading } = useNoteStore();
   const { selectedPart } = useViewerStore();
+
+  // Load notes on mount
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
   const [currentNote, setCurrentNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filterByPart, setFilterByPart] = useState(false);
@@ -133,7 +138,12 @@ export default function NotePanel({ machineryId }: NotePanelProps) {
 
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto space-y-3">
-        {machineryNotes.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+            <p className="text-sm">노트를 불러오는 중...</p>
+          </div>
+        ) : machineryNotes.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
             <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>

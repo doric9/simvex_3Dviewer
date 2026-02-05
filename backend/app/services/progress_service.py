@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import User, MachineryProgress, QuizAttempt, LearningSession
+from app.models.database import User, MachineryProgress, QuizAttempt, LearningSession, Note
 
 
 class ProgressService:
@@ -207,3 +207,24 @@ class ProgressService:
             await self.db.refresh(session)
 
         return session
+
+    async def reset_user_data(self, user_id: str) -> None:
+        """Clear all data for a specific user."""
+        from sqlalchemy import delete
+        
+        # Delete quiz attempts
+        await self.db.execute(delete(QuizAttempt).where(QuizAttempt.user_id == user_id))
+        
+        # Delete machinery progress
+        await self.db.execute(delete(MachineryProgress).where(MachineryProgress.user_id == user_id))
+        
+        # Delete learning sessions
+        await self.db.execute(delete(LearningSession).where(LearningSession.user_id == user_id))
+        
+        # Delete notes
+        await self.db.execute(delete(Note).where(Note.user_id == user_id))
+        
+        # Optionally delete user
+        await self.db.execute(delete(User).where(User.id == user_id))
+        
+        await self.db.commit()

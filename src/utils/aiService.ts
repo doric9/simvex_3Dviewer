@@ -329,6 +329,63 @@ export async function checkBackendHealth(): Promise<boolean> {
   }
 }
 
+// Note API functions
+export interface Note {
+  id: string;
+  user_id: string;
+  machinery_id: string;
+  part_name?: string;
+  content: string;
+  timestamp: number | string;
+}
+
+export async function getUserNotes(userId: string): Promise<Note[]> {
+  if (!useBackend) return [];
+  const response = await fetch(`${API_BASE_URL}/notes/${userId}`);
+  if (!response.ok) return [];
+  return response.json();
+}
+
+export async function createNote(note: Omit<Note, 'timestamp'>): Promise<Note> {
+  if (!useBackend) {
+    return { ...note, timestamp: Date.now() };
+  }
+  const response = await fetch(`${API_BASE_URL}/notes/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(note),
+  });
+  if (!response.ok) throw new Error('Failed to create note');
+  return response.json();
+}
+
+export async function updateNote(noteId: string, content: string, partName?: string): Promise<Note> {
+  if (!useBackend) {
+    throw new Error('Backend needed for update');
+  }
+  const response = await fetch(`${API_BASE_URL}/notes/${noteId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, part_name: partName }),
+  });
+  if (!response.ok) throw new Error('Failed to update note');
+  return response.json();
+}
+
+export async function deleteNote(noteId: string): Promise<void> {
+  if (!useBackend) return;
+  await fetch(`${API_BASE_URL}/notes/${noteId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function resetUserAccount(userId: string): Promise<void> {
+  if (!useBackend) return;
+  await fetch(`${API_BASE_URL}/progress/${userId}/reset`, {
+    method: 'POST',
+  });
+}
+
 // Feedback
 export async function submitFeedback(
   machineryId: string,

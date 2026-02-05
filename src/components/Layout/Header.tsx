@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Network, MoreVertical, FileDown, Share2, Settings } from 'lucide-react';
+import { ArrowLeft, Network, MoreVertical, FileDown, Share2, Settings, RefreshCcw } from 'lucide-react';
 import { machineryData } from '../../data/machineryData';
+import { resetUserAccount } from '../../utils/aiService';
+import { getAnonymousUserId } from '../../utils/user';
+import { useNoteStore } from '../../stores/noteStore';
+import { useAIStore } from '../../stores/aiStore';
 
 interface HeaderProps {
   currentPage: 'home' | 'viewer' | 'flowchart';
@@ -17,7 +21,10 @@ export default function Header({
 }: HeaderProps) {
   const machinery = selectedMachinery ? machineryData[selectedMachinery] : null;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { clearNotes } = useNoteStore();
+  const { clearMessages } = useAIStore();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -39,6 +46,31 @@ export default function Header({
     setMenuOpen(false);
     // Dispatch custom event for Sidebar to handle (has access to notes/AI stores)
     window.dispatchEvent(new CustomEvent('simvex:exportPDF'));
+  };
+
+  const handleReset = async () => {
+    if (window.confirm('학습 기록, 작성한 노트, AI 대화 내용이 모두 초기화됩니다. 정말 초기화하시겠습니까?')) {
+      setMenuOpen(false);
+      setIsResetting(true);
+      try {
+        const userId = getAnonymousUserId();
+        await resetUserAccount(userId);
+
+        // Clear local stores
+        clearNotes();
+        if (selectedMachinery) {
+          clearMessages(selectedMachinery);
+        }
+
+        alert('기록이 성공적으로 초기화되었습니다.');
+        window.location.reload();
+      } catch (error) {
+        console.error('Failed to reset:', error);
+        alert('초기화 중 오류가 발생했습니다.');
+      } finally {
+        setIsResetting(false);
+      }
+    }
   };
 
   return (
@@ -83,7 +115,7 @@ export default function Header({
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                   <button
                     onClick={handleExportPDF}
                     className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors"
@@ -98,6 +130,15 @@ export default function Header({
                     <Share2 className="w-4 h-4 text-gray-400" />
                     <span className="text-sm text-gray-400">공유 (준비중)</span>
                   </button>
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button
+                    onClick={handleReset}
+                    className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-red-50 text-red-600 transition-colors"
+                  >
+                    <RefreshCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
+                    <span className="text-sm font-medium">학습 기록 초기화</span>
+                  </button>
+                  <div className="border-t border-gray-100 my-1"></div>
                   <button
                     className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors opacity-50 cursor-not-allowed"
                     disabled

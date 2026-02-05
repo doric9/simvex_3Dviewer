@@ -83,3 +83,29 @@ class UserProgressResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Note Schemas
+class NoteBase(BaseModel):
+    content: str
+    machinery_id: str
+    part_name: Optional[str] = None
+
+
+class NoteCreate(NoteBase):
+    id: Optional[str] = None
+    user_id: str
+
+
+class NoteUpdate(BaseModel):
+    content: Optional[str] = None
+    part_name: Optional[str] = None
+
+
+class NoteResponse(NoteBase):
+    id: str
+    user_id: str
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
