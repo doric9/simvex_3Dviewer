@@ -1,6 +1,7 @@
 """RAG retrieval service for finding relevant knowledge chunks."""
 
 import logging
+import re
 from dataclasses import dataclass
 
 import numpy as np
@@ -12,6 +13,21 @@ from app.config import get_settings
 from app.models.database import KnowledgeChunk
 
 logger = logging.getLogger(__name__)
+
+# Korean Unicode range for language detection
+_KOREAN_RE = re.compile(r'[\uac00-\ud7af\u3130-\u318f]')
+# Tokenization: split on whitespace and punctuation
+_TOKEN_SPLIT_RE = re.compile(r'[\s\.,;:!?\-\(\)\[\]{}\'\"]+')
+
+SOURCE_TYPE_BOOSTS: dict[str, float] = {
+    "machinery_theory": 1.15,
+    "machinery_description": 1.10,
+    "part_info": 1.10,
+    "wikipedia": 1.00,
+    "pdf_document": 1.05,
+    "user_document": 0.95,
+    "quiz_knowledge": 0.85,
+}
 
 
 @dataclass
@@ -58,6 +74,50 @@ class RetrievalService:
             return 0.0
         return float(np.dot(a, b) / (norm_a * norm_b))
 
+    @staticmethod
+    def _tokenize(text: str) -> set[str]:
+        """Tokenize text into terms. Adds character bigrams for Korean words."""
+        tokens: set[str] = set()
+        for word in _TOKEN_SPLIT_RE.split(text.lower()):
+            word = word.strip()
+            if not word:
+                continue
+            tokens.add(word)
+            # Add character bigrams for Korean words to handle compound terms
+            if _KOREAN_RE.search(word) and len(word) >= 2:
+                for i in range(len(word) - 1):
+                    tokens.add(word[i : i + 2])
+        return tokens
+
+    @staticmethod
+    def _keyword_score(query_tokens: set[str], chunk_text: str) -> float:
+        """Proportion of query tokens found in chunk content (0.0–1.0)."""
+        if not query_tokens:
+            return 0.0
+        chunk_lower = chunk_text.lower()
+        found = sum(1 for t in query_tokens if t in chunk_lower)
+        return found / len(query_tokens)
+
+    @staticmethod
+    def _detect_language(text: str) -> str:
+        """Simple language detection: has Korean chars → 'ko', else 'en'."""
+        return "ko" if _KOREAN_RE.search(text) else "en"
+
+    @staticmethod
+    def _rerank(
+        scored: list[tuple["KnowledgeChunk", float]],
+        query_lang: str,
+    ) -> list[tuple["KnowledgeChunk", float]]:
+        """Apply source-type boosts and language-match boost."""
+        reranked = []
+        for chunk, score in scored:
+            boost = SOURCE_TYPE_BOOSTS.get(chunk.source_type, 1.0)
+            if chunk.language == query_lang:
+                boost *= 1.05
+            reranked.append((chunk, score * boost))
+        reranked.sort(key=lambda x: x[1], reverse=True)
+        return reranked
+
     async def retrieve(
         self,
         query: str,
@@ -94,18 +154,23 @@ class RetrievalService:
         if not chunks:
             return []
 
-        # Get query embedding
+        # Get query embedding and tokenize query
         query_embedding = await self._get_embedding(query)
+        query_tokens = self._tokenize(query)
+        query_lang = self._detect_language(query)
 
-        # Calculate similarities
+        # Calculate hybrid scores (semantic + keyword)
         scored = []
         for chunk in chunks:
-            similarity = self._cosine_similarity(query_embedding, chunk.embedding)
-            if similarity >= threshold:
-                scored.append((chunk, similarity))
+            cosine_sim = self._cosine_similarity(query_embedding, chunk.embedding)
+            if cosine_sim < threshold:
+                continue
+            kw_score = self._keyword_score(query_tokens, chunk.content)
+            hybrid = 0.7 * cosine_sim + 0.3 * kw_score
+            scored.append((chunk, hybrid))
 
-        # Sort by score descending
-        scored.sort(key=lambda x: x[1], reverse=True)
+        # Re-rank with source-type and language boosts
+        scored = self._rerank(scored, query_lang)
 
         # Return top-k
         results = []

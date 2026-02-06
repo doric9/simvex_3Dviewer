@@ -147,9 +147,11 @@ class IngestionService:
         chunks_data = []
 
         for idx, q in enumerate(QUIZ_DATA):
-            # Combine question + correct answer + options for a rich knowledge chunk
+            # Combine question + correct answer + wrong answers for a rich knowledge chunk
             correct_text = q["options"][q["correct_answer"]]
-            content = f"퀴즈 지식 - {q['question']} 정답: {correct_text}"
+            wrong_options = [opt for i, opt in enumerate(q["options"]) if i != q["correct_answer"]]
+            wrong_text = ", ".join(wrong_options)
+            content = f"퀴즈 지식 - {q['question']} 정답: {correct_text}. 오답: {wrong_text}"
 
             chunks_data.append({
                 "content": content,
@@ -182,9 +184,12 @@ class IngestionService:
         chunks_data = []
         for article in articles:
             text_chunks = self._chunk_text(article["content"], max_chars=600, overlap=100)
+            # Prefix chunks with article title + machinery name for richer embeddings
+            machinery_name = MACHINERY_DATA.get(article["machinery_id"], {}).get("name", "")
+            prefix = f"{article['title']} ({machinery_name}): " if machinery_name else f"{article['title']}: "
             for idx, chunk_text in enumerate(text_chunks):
                 chunks_data.append({
-                    "content": chunk_text,
+                    "content": f"{prefix}{chunk_text}",
                     "source_type": "wikipedia",
                     "source_name": article["title"],
                     "machinery_id": article["machinery_id"],
@@ -250,7 +255,7 @@ class IngestionService:
         chunks_data = []
         for idx, chunk_text in enumerate(text_chunks):
             chunks_data.append({
-                "content": chunk_text,
+                "content": f"{source_name}: {chunk_text}",
                 "source_type": "pdf_document",
                 "source_name": source_name,
                 "machinery_id": machinery_id,
