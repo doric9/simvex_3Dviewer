@@ -45,7 +45,8 @@ class RetrievalResult:
 class RetrievalService:
     """Service for retrieving relevant knowledge chunks via semantic search."""
 
-    SIMILARITY_THRESHOLD = 0.72
+    SIMILARITY_THRESHOLD = 0.35  # Hybrid score threshold (after 0.7*cosine + 0.3*keyword)
+    COSINE_FLOOR = 0.15  # Minimum cosine to even consider a chunk (noise filter)
     MAX_RESULTS = 5
     MAX_CONTEXT_CHARS = 2000
     EMBEDDING_MODEL = "text-embedding-3-small"
@@ -163,11 +164,12 @@ class RetrievalService:
         scored = []
         for chunk in chunks:
             cosine_sim = self._cosine_similarity(query_embedding, chunk.embedding)
-            if cosine_sim < threshold:
+            if cosine_sim < self.COSINE_FLOOR:
                 continue
             kw_score = self._keyword_score(query_tokens, chunk.content)
             hybrid = 0.7 * cosine_sim + 0.3 * kw_score
-            scored.append((chunk, hybrid))
+            if hybrid >= threshold:
+                scored.append((chunk, hybrid))
 
         # Re-rank with source-type and language boosts
         scored = self._rerank(scored, query_lang)
@@ -250,5 +252,5 @@ class RetrievalService:
             query=query,
             machinery_id=machinery_id,
             top_k=top_k,
-            threshold=0.5,  # Lower threshold for broader search
+            threshold=0.2,  # Lower threshold for broader search
         )
