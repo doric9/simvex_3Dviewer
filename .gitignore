@@ -91,3 +91,6 @@ API Key*.docx
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Root database (relocated to backend/)
+/simvex.db

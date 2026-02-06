@@ -18,6 +18,13 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     topics_discussed: list[str] = []
+    from_cache: bool = False
+    cache_similarity: Optional[float] = None
+
+
+class FeedbackRequest(BaseModel):
+    question: str
+    positive: bool
 
 
 # Quiz Schemas
@@ -26,6 +33,7 @@ class QuizQuestion(BaseModel):
     question: str
     options: list[str]
     machinery_id: str
+    correct_answer: Optional[int] = None
 
 
 class QuizGenerateRequest(BaseModel):
@@ -72,6 +80,32 @@ class UserProgressResponse(BaseModel):
     overall_accuracy: float
     machinery_progress: list[MachineryProgressResponse]
     last_active: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Note Schemas
+class NoteBase(BaseModel):
+    content: str
+    machinery_id: str
+    part_name: Optional[str] = None
+
+
+class NoteCreate(NoteBase):
+    id: Optional[str] = None
+    user_id: str
+
+
+class NoteUpdate(BaseModel):
+    content: Optional[str] = None
+    part_name: Optional[str] = None
+
+
+class NoteResponse(NoteBase):
+    id: str
+    user_id: str
+    timestamp: datetime
 
     class Config:
         from_attributes = True

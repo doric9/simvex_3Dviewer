@@ -53,6 +53,43 @@ class ExplainerAgent(BaseAgent):
 
         return response_text, topics
 
+    async def invoke_stream(
+        self,
+        machinery_id: str,
+        user_message: str,
+        conversation_history: list[dict] | None = None,
+        user_id: str | None = None,
+    ):
+        """
+        Stream explanation to the user, yielding tokens as they arrive.
+
+        Args:
+            machinery_id: The machinery ID to explain
+            user_message: The user's message
+            conversation_history: Optional conversation history
+            user_id: Optional user ID for rate limiting
+
+        Yields:
+            Text chunks as they arrive from the LLM
+        """
+        # Get machinery-specific context
+        machinery_context = get_machinery_context(machinery_id)
+        base_prompt = get_explainer_prompt(machinery_id)
+
+        # Build full system prompt with context
+        system_prompt = f"{base_prompt}\n\n{EXPLAINER_BASE_PROMPT.format(machinery_context=machinery_context)}"
+
+        # Build messages
+        messages = self._build_messages(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            conversation_history=conversation_history,
+        )
+
+        # Stream LLM tokens
+        async for chunk in self._invoke_llm_stream(messages, user_id=user_id):
+            yield chunk
+
     def _extract_topics(
         self, user_message: str, response: str, machinery_id: str
     ) -> list[str]:

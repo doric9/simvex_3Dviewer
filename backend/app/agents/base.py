@@ -20,7 +20,7 @@ class BaseAgent(ABC):
         self.llm = ChatOpenAI(
             model=model,
             temperature=temperature,
-            max_tokens=500,
+            max_tokens=1000,
             api_key=settings.openai_api_key,
             use_responses_api=use_responses,
         )
@@ -84,3 +84,40 @@ class BaseAgent(ABC):
                     texts.append(str(block))
             return "".join(texts)
         return str(content) if content else ""
+
+    async def _invoke_llm_stream(self, messages: list, user_id: str | None = None):
+        """
+        Stream LLM response tokens with rate limiting.
+
+        Args:
+            messages: List of messages to send to the LLM
+            user_id: Optional user ID for per-user rate limiting
+
+        Yields:
+            Text chunks as they arrive from the LLM
+        """
+        # Check rate limit before streaming
+        await self._rate_limiter.acquire(user_id)
+
+        async for chunk in self.llm.astream(messages):
+            text = self._extract_chunk_text(chunk)
+            if text:
+                yield text
+
+    def _extract_chunk_text(self, chunk) -> str:
+        """Extract text from a streaming chunk."""
+        # Handle different chunk formats
+        if hasattr(chunk, "content"):
+            content = chunk.content
+            if isinstance(content, str):
+                return content
+            if isinstance(content, list):
+                texts = []
+                for block in content:
+                    if isinstance(block, dict):
+                        text = block.get("text") or block.get("content") or ""
+                        texts.append(text)
+                    elif hasattr(block, "text"):
+                        texts.append(block.text)
+                return "".join(texts)
+        return ""

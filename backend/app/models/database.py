@@ -28,6 +28,7 @@ class User(Base):
     # Relationships
     sessions: Mapped[list["LearningSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     progress: Mapped[list["MachineryProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    notes: Mapped[list["Note"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class LearningSession(Base):
@@ -87,6 +88,35 @@ class GeneratedQuiz(Base):
     difficulty: Mapped[str] = mapped_column(String(20), default="medium")
     topic: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+
+
+class Note(Base):
+    __tablename__ = "notes"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(50), ForeignKey("users.id"))
+    machinery_id: Mapped[str] = mapped_column(String(50))
+    part_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    content: Mapped[str] = mapped_column(Text)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="notes")
+
+
+class QACache(Base):
+    """Cache for frequently asked questions with semantic embeddings."""
+    __tablename__ = "qa_cache"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    machinery_id: Mapped[str] = mapped_column(String(50), index=True)
+    question: Mapped[str] = mapped_column(Text)
+    answer: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list] = mapped_column(JSON)  # Stored as list of floats
+    hit_count: Mapped[int] = mapped_column(Integer, default=1)
+    quality_score: Mapped[float] = mapped_column(Float, default=1.0)  # Based on user feedback
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+    last_used_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now, onupdate=_utc_now)
 
 
 # Database engine and session
