@@ -51,6 +51,7 @@ async def generate_quiz(
                 question=q["question"],
                 options=q["options"],
                 machinery_id=machinery_id,
+                correct_answer=q.get("correct_answer"),
             )
             for q in questions
         ]

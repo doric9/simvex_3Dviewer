@@ -64,3 +64,20 @@ async def get_machinery_progress(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Progress retrieval error: {str(e)}")
+@router.post("/{user_id}/reset")
+async def reset_user_progress(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Reset all learning progress, notes, and sessions for a user.
+    """
+    try:
+        progress_service = ProgressService(db)
+        # We also need to delete notes, so we can use NoteService or just delete in ProgressService
+        # Let's add a reset_user method to ProgressService for simplicity
+        await progress_service.reset_user_data(user_id)
+        return {"status": "success", "message": "User data reset successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Account reset error: {str(e)}")

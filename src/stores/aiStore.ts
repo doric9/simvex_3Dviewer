@@ -8,6 +8,7 @@ interface AIStore {
   addMessage: (machineryId: string, role: 'user' | 'assistant', content: string) => void;
   setLoading: (loading: boolean) => void;
   getMessagesByMachinery: (machineryId: string) => AIMessage[];
+  getInteractionCount: (machineryId: string) => number;
   clearMessages: (machineryId: string) => void;
 }
 
@@ -33,6 +34,9 @@ export const useAIStore = create<AIStore>()(
       setLoading: (loading) => set({ isLoading: loading }),
       getMessagesByMachinery: (machineryId) => {
         return get().messages[machineryId] || [];
+      },
+      getInteractionCount: (machineryId) => {
+        return (get().messages[machineryId] || []).filter(m => m.role === 'user').length;
       },
       clearMessages: (machineryId) => {
         set((state) => {

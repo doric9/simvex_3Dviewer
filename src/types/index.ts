@@ -58,6 +58,7 @@ export interface Note {
   machineryId: string;
   content: string;
   timestamp: number;
+  partName?: string; // Optional: tag note to a specific part
 }
 
 export interface AIMessage {

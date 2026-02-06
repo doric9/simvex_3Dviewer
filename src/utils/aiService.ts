@@ -101,12 +101,103 @@ export async function sendMessageToAI(
   }
 }
 
+/**
+ * Stream a message to AI and receive tokens as they arrive.
+ * Uses Server-Sent Events (SSE) for real-time streaming.
+ */
+export async function streamMessageFromAI(
+  machineryId: string,
+  userMessage: string,
+  conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [],
+  userId: string | undefined,
+  onChunk: (text: string) => void,
+  onComplete?: (topics: string[]) => void,
+  onError?: (error: string) => void
+): Promise<void> {
+  // Only works with backend
+  if (!useBackend) {
+    // Fall back to non-streaming
+    const response = await sendMessageToAI(machineryId, userMessage, conversationHistory, userId);
+    onChunk(response);
+    onComplete?.([]);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/${machineryId}/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: userMessage,
+        conversation_history: conversationHistory,
+        user_id: userId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Stream error: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+
+            if (data.text) {
+              onChunk(data.text);
+            }
+
+            if (data.done) {
+              onComplete?.(data.topics || []);
+            }
+
+            if (data.error) {
+              onError?.(data.error);
+            }
+          } catch (parseError) {
+            // Ignore JSON parse errors for partial data
+          }
+        }
+      }
+    }
+  } catch (error: any) {
+    console.error('Stream error:', error);
+    onError?.(error?.message || 'Streaming failed');
+
+    // Fall back to non-streaming on error
+    try {
+      const response = await sendMessageToAI(machineryId, userMessage, conversationHistory, userId);
+      onChunk(response);
+      onComplete?.([]);
+    } catch (fallbackError) {
+      onError?.('Failed to get response');
+    }
+  }
+}
+
 // Quiz API functions
 export interface QuizQuestion {
   id: string;
   question: string;
   options: string[];
   machinery_id: string;
+  correct_answer?: number;
 }
 
 export interface QuizAnswerResponse {
@@ -236,4 +327,76 @@ export async function checkBackendHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Note API functions
+export interface Note {
+  id: string;
+  user_id: string;
+  machinery_id: string;
+  part_name?: string;
+  content: string;
+  timestamp: number | string;
+}
+
+export async function getUserNotes(userId: string): Promise<Note[]> {
+  if (!useBackend) return [];
+  const response = await fetch(`${API_BASE_URL}/notes/${userId}`);
+  if (!response.ok) return [];
+  return response.json();
+}
+
+export async function createNote(note: Omit<Note, 'timestamp'>): Promise<Note> {
+  if (!useBackend) {
+    return { ...note, timestamp: Date.now() };
+  }
+  const response = await fetch(`${API_BASE_URL}/notes/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(note),
+  });
+  if (!response.ok) throw new Error('Failed to create note');
+  return response.json();
+}
+
+export async function updateNote(noteId: string, content: string, partName?: string): Promise<Note> {
+  if (!useBackend) {
+    throw new Error('Backend needed for update');
+  }
+  const response = await fetch(`${API_BASE_URL}/notes/${noteId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, part_name: partName }),
+  });
+  if (!response.ok) throw new Error('Failed to update note');
+  return response.json();
+}
+
+export async function deleteNote(noteId: string): Promise<void> {
+  if (!useBackend) return;
+  await fetch(`${API_BASE_URL}/notes/${noteId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function resetUserAccount(userId: string): Promise<void> {
+  if (!useBackend) return;
+  await fetch(`${API_BASE_URL}/progress/${userId}/reset`, {
+    method: 'POST',
+  });
+}
+
+// Feedback
+export async function submitFeedback(
+  machineryId: string,
+  question: string,
+  positive: boolean
+): Promise<void> {
+  if (!useBackend) return;
+
+  await fetch(`${API_BASE_URL}/chat/${machineryId}/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question, positive }),
+  });
 }
