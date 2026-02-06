@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, XCircle, RotateCcw, Sparkles, Loader2, Eye } from 'lucide-react';
 import { quizData as staticQuizData } from '../../data/quizData';
-import { generateQuiz, submitQuizAnswer, QuizQuestion as APIQuizQuestion } from '../../utils/aiService';
+import { generateQuiz, streamQuizFeedback, QuizQuestion as APIQuizQuestion } from '../../utils/aiService';
 import { QuizQuestion } from '../../types';
 import { getAnonymousUserId } from '../../utils/user';
 
@@ -112,42 +112,83 @@ export default function QuizPanel({ machineryId }: QuizPanelProps) {
       setScore(score + 1);
     }
 
-    let feedback: string | null = null;
-
     // Get AI feedback from backend
     if (useBackend) {
       setIsLoading(true);
+      setAiFeedback('');
+
+      let accumulated = '';
+
       try {
-        const response = await submitQuizAnswer(
+        await streamQuizFeedback(
           machineryId,
           currentQuestion.id,
           currentQuestion.question,
           currentQuestion.options,
           answerIndex,
           currentQuestion.correctAnswer,
-          userId
+          userId,
+          // onResult — correctness already shown via local state
+          () => {},
+          // onChunk — accumulate tokens progressively
+          (text: string) => {
+            accumulated += text;
+            setAiFeedback(accumulated);
+          },
+          // onComplete — finalize
+          (feedback: string) => {
+            const final = feedback || accumulated;
+            setAiFeedback(final);
+            setIsLoading(false);
+
+            setAnsweredQuestions(prev => [...prev, {
+              question: currentQuestion,
+              selectedAnswer: answerIndex,
+              isCorrect,
+              feedback: final,
+            }]);
+          },
+          // onError — fallback
+          (error: string) => {
+            console.error('Quiz stream error:', error);
+            const fallback = isCorrect
+              ? '정답입니다! 잘 하셨습니다.'
+              : `정답은 ${currentQuestion.correctAnswer + 1}번 "${currentQuestion.options[currentQuestion.correctAnswer]}"입니다.`;
+            setAiFeedback(fallback);
+            setIsLoading(false);
+
+            setAnsweredQuestions(prev => [...prev, {
+              question: currentQuestion,
+              selectedAnswer: answerIndex,
+              isCorrect,
+              feedback: fallback,
+            }]);
+          }
         );
-        feedback = response.feedback;
-        setAiFeedback(response.feedback);
       } catch (error) {
         console.error('Failed to get AI feedback:', error);
-        // Provide fallback feedback
-        feedback = isCorrect
+        const fallback = isCorrect
           ? '정답입니다! 잘 하셨습니다.'
           : `정답은 ${currentQuestion.correctAnswer + 1}번 "${currentQuestion.options[currentQuestion.correctAnswer]}"입니다.`;
-        setAiFeedback(feedback);
-      } finally {
+        setAiFeedback(fallback);
         setIsLoading(false);
-      }
-    }
 
-    // Track answered question
-    setAnsweredQuestions(prev => [...prev, {
-      question: currentQuestion,
-      selectedAnswer: answerIndex,
-      isCorrect,
-      feedback,
-    }]);
+        setAnsweredQuestions(prev => [...prev, {
+          question: currentQuestion,
+          selectedAnswer: answerIndex,
+          isCorrect,
+          feedback: fallback,
+        }]);
+      }
+    } else {
+      // No backend — track without feedback
+      setAnsweredQuestions(prev => [...prev, {
+        question: currentQuestion,
+        selectedAnswer: answerIndex,
+        isCorrect,
+        feedback: null,
+      }]);
+    }
   };
 
   const handleNext = () => {
@@ -380,13 +421,16 @@ export default function QuizPanel({ machineryId }: QuizPanelProps) {
               <Sparkles className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-purple-800 mb-1">AI 피드백</p>
-                {isLoading ? (
+                {isLoading && !aiFeedback ? (
                   <div className="flex items-center gap-2 text-purple-600">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">피드백 생성 중...</span>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-700">{aiFeedback}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm text-gray-700">{aiFeedback}</p>
+                    {isLoading && <Loader2 className="w-3 h-3 animate-spin text-purple-400 flex-shrink-0" />}
+                  </div>
                 )}
               </div>
             </div>

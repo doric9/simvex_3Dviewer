@@ -9,6 +9,7 @@ from app.agents.prompts import (
     QUIZ_GENERATION_PROMPT,
     QUIZ_FEEDBACK_PROMPT,
     QUIZ_TOPICS_INSTRUCTION,
+    QUIZ_RAG_CONTEXT_PROMPT,
 )
 from app.data.machinery import get_machinery_context
 from app.data.quiz_bank import get_questions_by_machinery
@@ -35,6 +36,7 @@ class QuizzerAgent(BaseAgent):
         exclude_ids: list[str] | None = None,
         topics_learned: list[str] | None = None,
         user_id: str | None = None,
+        rag_context: str | None = None,
     ) -> list[dict]:
         """
         Generate quiz questions for a machinery.
@@ -83,7 +85,7 @@ class QuizzerAgent(BaseAgent):
         remaining = count - len(questions)
         if remaining > 0:
             generated = await self._generate_with_llm(
-                machinery_id, remaining, quiz_accuracy, topics_learned, user_id
+                machinery_id, remaining, quiz_accuracy, topics_learned, user_id, rag_context
             )
             questions.extend(generated)
 
@@ -117,6 +119,7 @@ class QuizzerAgent(BaseAgent):
         quiz_accuracy: float,
         topics_learned: list[str] | None = None,
         user_id: str | None = None,
+        rag_context: str | None = None,
     ) -> list[dict]:
         """Generate questions using LLM, focused on learned topics."""
         # Determine difficulty based on accuracy
@@ -142,6 +145,10 @@ class QuizzerAgent(BaseAgent):
             difficulty=difficulty,
             topics_instruction=topics_instruction,
         )
+
+        # Append RAG context for richer question generation
+        if rag_context:
+            prompt += QUIZ_RAG_CONTEXT_PROMPT.format(rag_context=rag_context)
 
         messages = self._build_messages(
             system_prompt=QUIZZER_SYSTEM_PROMPT,
@@ -169,6 +176,49 @@ class QuizzerAgent(BaseAgent):
             pass
 
         return []
+
+    async def grade_answer_stream(
+        self,
+        question: str,
+        options: list[str],
+        selected_answer: int,
+        correct_answer: int,
+        user_id: str | None = None,
+    ):
+        """
+        Stream grading feedback token-by-token.
+
+        Same prompt as grade_answer() but uses streaming with lower max_tokens.
+
+        Yields:
+            Text chunks as they arrive from the LLM
+        """
+        is_correct = selected_answer == correct_answer
+        result = "정답" if is_correct else "오답"
+
+        prompt = QUIZ_FEEDBACK_PROMPT.format(
+            question=question,
+            options=", ".join(f"{i}. {opt}" for i, opt in enumerate(options)),
+            selected_answer=selected_answer,
+            selected_text=options[selected_answer] if 0 <= selected_answer < len(options) else "없음",
+            correct_answer=correct_answer,
+            correct_text=options[correct_answer] if 0 <= correct_answer < len(options) else "없음",
+            result=result,
+        )
+
+        messages = self._build_messages(
+            system_prompt=QUIZZER_SYSTEM_PROMPT,
+            user_message=prompt,
+        )
+
+        # Lower max_tokens for feedback (prompt asks for 100-150 chars)
+        original_max_tokens = self.llm.max_tokens
+        self.llm.max_tokens = 150
+        try:
+            async for chunk in self._invoke_llm_stream(messages, user_id=user_id):
+                yield chunk
+        finally:
+            self.llm.max_tokens = original_max_tokens
 
     async def grade_answer(
         self,

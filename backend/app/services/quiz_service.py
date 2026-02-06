@@ -1,11 +1,14 @@
 """Quiz service for managing quiz operations."""
 
+import asyncio
 from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import GeneratedQuiz, QuizAttempt, MachineryProgress
 from app.agents.quizzer import QuizzerAgent
+from app.services.retrieval_service import RetrievalService
 
 
 class QuizService:
@@ -29,41 +32,70 @@ class QuizService:
         """
         # Get user's accuracy and topics for this machinery if user_id provided
         quiz_accuracy = 0.5  # Default to medium difficulty
-        exclude_ids = []
-        topics_learned = []
+        exclude_ids: list[str] = []
+        topics_learned: list[str] = []
 
         if user_id:
-            # Get previously answered questions
-            result = await self.db.execute(
-                select(QuizAttempt.question_id).where(
-                    QuizAttempt.user_id == user_id,
-                    QuizAttempt.machinery_id == machinery_id,
+            # Run both DB queries in parallel (they are independent)
+            async def _fetch_attempts():
+                result = await self.db.execute(
+                    select(QuizAttempt).where(
+                        QuizAttempt.user_id == user_id,
+                        QuizAttempt.machinery_id == machinery_id,
+                    )
                 )
-            )
-            exclude_ids = [row[0] for row in result.fetchall()]
+                return result.scalars().all()
 
-            # Calculate accuracy
-            result = await self.db.execute(
-                select(QuizAttempt).where(
-                    QuizAttempt.user_id == user_id,
-                    QuizAttempt.machinery_id == machinery_id,
+            async def _fetch_topics():
+                result = await self.db.execute(
+                    select(MachineryProgress).where(
+                        MachineryProgress.user_id == user_id,
+                        MachineryProgress.machinery_id == machinery_id,
+                    )
                 )
+                return result.scalar_one_or_none()
+
+            attempts, progress = await asyncio.gather(
+                _fetch_attempts(), _fetch_topics()
             )
-            attempts = result.scalars().all()
+
+            # Derive exclude_ids + accuracy from the single attempts query
             if attempts:
+                exclude_ids = [a.question_id for a in attempts]
                 correct = sum(1 for a in attempts if a.is_correct)
                 quiz_accuracy = correct / len(attempts)
 
-            # Get topics learned from conversations with Explainer
-            result = await self.db.execute(
-                select(MachineryProgress).where(
-                    MachineryProgress.user_id == user_id,
-                    MachineryProgress.machinery_id == machinery_id,
-                )
-            )
-            progress = result.scalar_one_or_none()
             if progress and progress.topics_learned:
                 topics_learned = progress.topics_learned
+
+        # Check if bank questions alone can satisfy the request before
+        # doing any expensive work (RAG embedding API call).
+        from app.data.quiz_bank import get_questions_by_machinery
+
+        bank_questions = get_questions_by_machinery(machinery_id)
+        available_bank = [q for q in bank_questions if q["id"] not in exclude_ids]
+        needs_llm = len(available_bank) < count
+
+        # Only retrieve RAG context when LLM generation is actually needed
+        rag_context = None
+        if needs_llm:
+            try:
+                retrieval = RetrievalService(self.db)
+                query = f"{machinery_id} 퀴즈"
+                if topics_learned:
+                    query += " " + " ".join(topics_learned[:3])
+                rag_context_str, _ = await asyncio.wait_for(
+                    retrieval.retrieve_for_context(
+                        query=query,
+                        machinery_id=machinery_id,
+                        max_chars=1500,
+                    ),
+                    timeout=2.0,
+                )
+                if rag_context_str:
+                    rag_context = rag_context_str
+            except (asyncio.TimeoutError, Exception):
+                pass  # RAG is additive — quiz generation works without it
 
         # Generate questions customized to learned topics
         questions = await self.quizzer.generate_quiz(
@@ -73,6 +105,7 @@ class QuizService:
             exclude_ids=exclude_ids,
             topics_learned=topics_learned,
             user_id=user_id,
+            rag_context=rag_context,
         )
 
         return questions
