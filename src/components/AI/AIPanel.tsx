@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, ThumbsUp, ThumbsDown, Sparkles, Zap, Bookmark } from 'lucide-react';
+import { Send, Bot, User, ThumbsUp, ThumbsDown, Sparkles, Zap, Bookmark, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAIStore } from '../../stores/aiStore';
 import { useNoteStore } from '../../stores/noteStore';
@@ -46,6 +46,7 @@ export default function AIPanel({ machineryId }: AIPanelProps) {
   const [streamingText, setStreamingText] = useState('');
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'up' | 'down'>>({});
   const [savedMessages, setSavedMessages] = useState<Set<string>>(new Set());
+  const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const messages = getMessagesByMachinery(machineryId);
@@ -87,9 +88,9 @@ export default function AIPanel({ machineryId }: AIPanelProps) {
           fullResponse += chunk;
           setStreamingText(fullResponse);
         },
-        (_topics) => {
-          // On complete, add the full message
-          addMessage(machineryId, 'assistant', fullResponse);
+        (_topics, sources) => {
+          // On complete, add the full message with sources
+          addMessage(machineryId, 'assistant', fullResponse, sources);
           setStreamingText('');
         },
         (error) => {
@@ -223,6 +224,43 @@ export default function AIPanel({ machineryId }: AIPanelProps) {
                   >
                     <Bookmark className="w-3.5 h-3.5" />
                   </button>
+                </div>
+              )}
+
+              {/* Collapsible sources section */}
+              {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
+                <div className="mt-1.5 ml-1">
+                  <button
+                    onClick={() => {
+                      setExpandedSources(prev => {
+                        const next = new Set(prev);
+                        if (next.has(message.id)) next.delete(message.id);
+                        else next.add(message.id);
+                        return next;
+                      });
+                    }}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    {expandedSources.has(message.id) ? (
+                      <ChevronDown className="w-3 h-3" />
+                    ) : (
+                      <ChevronRight className="w-3 h-3" />
+                    )}
+                    <BookOpen className="w-3 h-3" />
+                    <span>참고 자료 ({message.sources.length})</span>
+                  </button>
+                  {expandedSources.has(message.id) && (
+                    <div className="mt-1 ml-4 space-y-1">
+                      {message.sources.map((src, idx) => (
+                        <div key={idx} className="text-xs text-gray-500 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                          <span>{src.source_name}</span>
+                          {src.section && <span className="text-gray-400">· {src.section}</span>}
+                          <span className="text-gray-400 ml-auto">{Math.round(src.relevance_score * 100)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

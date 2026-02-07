@@ -105,13 +105,20 @@ export async function sendMessageToAI(
  * Stream a message to AI and receive tokens as they arrive.
  * Uses Server-Sent Events (SSE) for real-time streaming.
  */
+export interface SourceReference {
+  source_name: string;
+  section?: string;
+  machinery_id?: string;
+  relevance_score: number;
+}
+
 export async function streamMessageFromAI(
   machineryId: string,
   userMessage: string,
   conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [],
   userId: string | undefined,
   onChunk: (text: string) => void,
-  onComplete?: (topics: string[]) => void,
+  onComplete?: (topics: string[], sources?: SourceReference[]) => void,
   onError?: (error: string) => void
 ): Promise<void> {
   // Only works with backend
@@ -164,7 +171,7 @@ export async function streamMessageFromAI(
             }
 
             if (data.done) {
-              onComplete?.(data.topics || []);
+              onComplete?.(data.topics || [], data.sources || []);
             }
 
             if (data.error) {
@@ -267,6 +274,106 @@ export async function submitQuizAnswer(
   }
 
   return response.json();
+}
+
+/**
+ * Stream quiz feedback via SSE for faster perceived response.
+ * Falls back to submitQuizAnswer() on error.
+ */
+export async function streamQuizFeedback(
+  machineryId: string,
+  questionId: string,
+  questionText: string,
+  options: string[],
+  selectedAnswer: number,
+  correctAnswer: number,
+  userId: string | undefined,
+  onResult: (isCorrect: boolean, correctAnswer: number) => void,
+  onChunk: (text: string) => void,
+  onComplete: (feedback: string) => void,
+  onError?: (error: string) => void
+): Promise<void> {
+  if (!useBackend) {
+    onError?.('Backend API not configured');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/quiz/${machineryId}/answer/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question_id: questionId,
+        question_text: questionText,
+        options,
+        selected_answer: selectedAnswer,
+        correct_answer: correctAnswer,
+        user_id: userId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Stream error: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+
+            if (data.is_correct !== undefined && data.correct_answer !== undefined && !data.done) {
+              onResult(data.is_correct, data.correct_answer);
+            }
+
+            if (data.text) {
+              onChunk(data.text);
+            }
+
+            if (data.done) {
+              onComplete(data.feedback || '');
+            }
+
+            if (data.error) {
+              onError?.(data.error);
+            }
+          } catch {
+            // Ignore JSON parse errors for partial data
+          }
+        }
+      }
+    }
+  } catch (error: any) {
+    console.error('Quiz stream error:', error);
+
+    // Fallback to non-streaming
+    try {
+      const response = await submitQuizAnswer(
+        machineryId, questionId, questionText, options,
+        selectedAnswer, correctAnswer, userId
+      );
+      onResult(response.is_correct, response.correct_answer);
+      onChunk(response.feedback);
+      onComplete(response.feedback);
+    } catch (fallbackError: any) {
+      onError?.(fallbackError?.message || 'Failed to get feedback');
+    }
+  }
 }
 
 // Progress API functions
@@ -399,4 +506,73 @@ export async function submitFeedback(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question, positive }),
   });
+}
+
+// PDF upload
+export interface PDFUploadResponse {
+  message: string;
+  source_name: string;
+  chunks_created: number;
+  machinery_id?: string;
+}
+
+export async function uploadPDF(
+  file: File,
+  machineryId?: string
+): Promise<PDFUploadResponse> {
+  if (!useBackend) {
+    throw new Error('Backend API not configured. Set VITE_API_BASE_URL in .env');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const params = machineryId ? `?machinery_id=${encodeURIComponent(machineryId)}` : '';
+  const response = await fetch(`${API_BASE_URL}/knowledge/ingest/pdf${params}`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `PDF upload failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Knowledge search
+export interface KnowledgeSearchResult {
+  content: string;
+  source_name: string;
+  source_type: string;
+  section?: string;
+  machinery_id?: string;
+  relevance_score: number;
+  language: string;
+}
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  results: KnowledgeSearchResult[];
+  count: number;
+}
+
+export async function searchKnowledge(
+  query: string,
+  machineryId?: string,
+  limit: number = 10
+): Promise<KnowledgeSearchResponse> {
+  if (!useBackend) {
+    return { query, results: [], count: 0 };
+  }
+
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  if (machineryId) params.set('machinery_id', machineryId);
+
+  const response = await fetch(`${API_BASE_URL}/knowledge/search?${params}`);
+  if (!response.ok) {
+    throw new Error(`Knowledge search failed: ${response.status}`);
+  }
+  return response.json();
 }

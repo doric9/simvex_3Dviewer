@@ -61,11 +61,19 @@ export interface Note {
   partName?: string; // Optional: tag note to a specific part
 }
 
+export interface SourceReference {
+  source_name: string;
+  section?: string;
+  machinery_id?: string;
+  relevance_score: number;
+}
+
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  sources?: SourceReference[];
 }
 
 export interface QuizQuestion {

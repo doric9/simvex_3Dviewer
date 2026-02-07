@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AIMessage } from '../types';
+import { AIMessage, SourceReference } from '../types';
 
 interface AIStore {
   messages: Record<string, AIMessage[]>;
   isLoading: boolean;
-  addMessage: (machineryId: string, role: 'user' | 'assistant', content: string) => void;
+  addMessage: (machineryId: string, role: 'user' | 'assistant', content: string, sources?: SourceReference[]) => void;
   setLoading: (loading: boolean) => void;
   getMessagesByMachinery: (machineryId: string) => AIMessage[];
   getInteractionCount: (machineryId: string) => number;
@@ -17,12 +17,13 @@ export const useAIStore = create<AIStore>()(
     (set, get) => ({
       messages: {},
       isLoading: false,
-      addMessage: (machineryId, role, content) => {
+      addMessage: (machineryId, role, content, sources) => {
         const newMessage: AIMessage = {
           id: Date.now().toString(),
           role,
           content,
           timestamp: Date.now(),
+          sources,
         };
         set((state) => ({
           messages: {

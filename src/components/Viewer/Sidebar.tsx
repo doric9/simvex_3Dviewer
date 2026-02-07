@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, FileText, MessageSquare, Brain, GraduationCap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, FileText, MessageSquare, Brain, GraduationCap, BookOpen } from 'lucide-react';
 import NotePanel from '../Notes/NotePanel';
 import AIPanel from '../AI/AIPanel';
 import QuizPanel from '../Quiz/QuizPanel';
 import LearningProgress from '../Education/LearningProgress';
+import KnowledgeSearch from '../Education/KnowledgeSearch';
 import { generatePDF } from '../../utils/pdfGenerator';
 import { useNoteStore } from '../../stores/noteStore';
 import { useAIStore } from '../../stores/aiStore';
@@ -15,7 +16,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-type Tab = 'note' | 'ai' | 'quiz' | 'progress';
+type Tab = 'note' | 'ai' | 'quiz' | 'progress' | 'search';
 
 export default function Sidebar({ machineryId, isOpen, onToggle }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>('note');
@@ -111,6 +112,17 @@ export default function Sidebar({ machineryId, isOpen, onToggle }: SidebarProps)
             <Brain className="w-5 h-5" />
             <span className="text-xs">퀴즈</span>
           </button>
+          <button
+            onClick={() => setActiveTab('search')}
+            className={`flex-1 py-3 px-2 flex items-center justify-center gap-1 transition-colors ${activeTab === 'search'
+              ? 'bg-blue-50 text-primary border-b-2 border-primary'
+              : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            title="지식 검색"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-xs">검색</span>
+          </button>
         </div>
 
         {/* Content */}
@@ -124,6 +136,7 @@ export default function Sidebar({ machineryId, isOpen, onToggle }: SidebarProps)
           {activeTab === 'note' && <NotePanel machineryId={machineryId} />}
           {activeTab === 'ai' && <AIPanel machineryId={machineryId} />}
           {activeTab === 'quiz' && <QuizPanel machineryId={machineryId} />}
+          {activeTab === 'search' && <KnowledgeSearch machineryId={machineryId} />}
         </div>
       </div>
     </>

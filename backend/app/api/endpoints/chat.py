@@ -5,10 +5,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
-from app.models.schemas import ChatRequest, ChatResponse, FeedbackRequest
+from app.models.schemas import ChatRequest, ChatResponse, FeedbackRequest, SourceReference
 from app.agents.explainer import ExplainerAgent
 from app.services.progress_service import ProgressService
 from app.services.cache_service import CacheService
+from app.services.retrieval_service import RetrievalService
 from app.data.machinery import get_machinery
 from app.utils.rate_limiter import RateLimitExceeded
 
@@ -50,6 +51,29 @@ async def chat_with_explainer(
                     cache_similarity=round(similarity, 3),
                 )
 
+        # Retrieve RAG context
+        rag_context = None
+        sources = []
+        try:
+            retrieval_service = RetrievalService(db)
+            rag_context_str, rag_results = await retrieval_service.retrieve_for_context(
+                query=request.message,
+                machinery_id=machinery_id,
+            )
+            if rag_context_str:
+                rag_context = rag_context_str
+                sources = [
+                    SourceReference(
+                        source_name=r.source_name,
+                        section=r.section,
+                        machinery_id=r.machinery_id,
+                        relevance_score=r.relevance_score,
+                    )
+                    for r in rag_results
+                ]
+        except Exception:
+            pass  # RAG is additive — chat works without it
+
         # Initialize agent
         explainer = ExplainerAgent()
 
@@ -65,6 +89,7 @@ async def chat_with_explainer(
             user_message=request.message,
             conversation_history=history,
             user_id=request.user_id,
+            rag_context=rag_context,
         )
 
         # Cache the response for future similar questions
@@ -91,6 +116,7 @@ async def chat_with_explainer(
             response=response_text,
             topics_discussed=topics,
             from_cache=False,
+            sources=sources,
         )
 
     except RateLimitExceeded as e:
@@ -133,6 +159,25 @@ async def chat_stream(
             machinery_id, request.message
         )
 
+    # Retrieve RAG context for streaming
+    rag_context = None
+    sources_data = []
+    if not cached_answer:
+        try:
+            retrieval_service = RetrievalService(db)
+            rag_context_str, rag_results = await retrieval_service.retrieve_for_context(
+                query=request.message,
+                machinery_id=machinery_id,
+            )
+            if rag_context_str:
+                rag_context = rag_context_str
+                sources_data = [
+                    {"source_name": r.source_name, "section": r.section, "machinery_id": r.machinery_id, "relevance_score": r.relevance_score}
+                    for r in rag_results
+                ]
+        except Exception:
+            pass  # RAG is additive
+
     async def generate():
         """Generate SSE events for streaming response."""
         nonlocal cached_answer
@@ -169,6 +214,7 @@ async def chat_stream(
                 user_message=request.message,
                 conversation_history=history,
                 user_id=request.user_id,
+                rag_context=rag_context,
             ):
                 full_response += chunk
                 yield f"data: {json.dumps({'text': chunk})}\n\n"
@@ -196,8 +242,8 @@ async def chat_stream(
                 )
                 await progress_service.update_user_activity(request.user_id)
 
-            # Send completion event with topics
-            yield f"data: {json.dumps({'done': True, 'topics': topics})}\n\n"
+            # Send completion event with topics and sources
+            yield f"data: {json.dumps({'done': True, 'topics': topics, 'sources': sources_data})}\n\n"
 
         except RateLimitExceeded as e:
             yield f"data: {json.dumps({'error': e.message, 'retry_after': e.retry_after})}\n\n"

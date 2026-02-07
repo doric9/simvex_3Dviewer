@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from app.config import get_settings
 from app.api.router import api_router
-from app.models.database import init_db
+from app.models.database import init_db, async_session, KnowledgeChunk
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,24 @@ async def lifespan(app: FastAPI):
 
     await init_db()
     logger.info("Database initialized")
+
+    # Auto-ingest built-in knowledge if table is empty
+    try:
+        from sqlalchemy import select, func
+        async with async_session() as db:
+            result = await db.execute(select(func.count(KnowledgeChunk.id)))
+            count = result.scalar()
+            if count == 0:
+                logger.info("Knowledge base empty — auto-ingesting built-in data...")
+                from app.services.ingestion_service import IngestionService
+                ingestion = IngestionService(db)
+                m_count = await ingestion.ingest_machinery_data()
+                q_count = await ingestion.ingest_quiz_knowledge()
+                logger.info(f"Auto-ingested {m_count + q_count} knowledge chunks (machinery={m_count}, quiz={q_count})")
+            else:
+                logger.info(f"Knowledge base has {count} chunks — skipping auto-ingest")
+    except Exception as e:
+        logger.warning(f"Auto-ingest failed (non-fatal): {e}")
 
     yield
 

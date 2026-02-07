@@ -104,6 +104,24 @@ class Note(Base):
     user: Mapped["User"] = relationship(back_populates="notes")
 
 
+class KnowledgeChunk(Base):
+    """Knowledge chunks for RAG retrieval."""
+    __tablename__ = "knowledge_chunks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content: Mapped[str] = mapped_column(Text)
+    source_type: Mapped[str] = mapped_column(String(50), index=True)  # machinery_description, wikipedia, pdf_document, etc.
+    source_name: Mapped[str] = mapped_column(String(200))  # filename or "V4_Engine"
+    machinery_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
+    part_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    section: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # overview, theory, part_detail, quiz_knowledge
+    chunk_index: Mapped[int] = mapped_column(Integer, default=0)
+    embedding: Mapped[list] = mapped_column(JSON)  # list[float], dimension 1536
+    language: Mapped[str] = mapped_column(String(10), default="ko")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now, onupdate=_utc_now)
+
+
 class QACache(Base):
     """Cache for frequently asked questions with semantic embeddings."""
     __tablename__ = "qa_cache"

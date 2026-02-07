@@ -15,11 +15,19 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class SourceReference(BaseModel):
+    source_name: str
+    section: Optional[str] = None
+    machinery_id: Optional[str] = None
+    relevance_score: float = 0.0
+
+
 class ChatResponse(BaseModel):
     response: str
     topics_discussed: list[str] = []
     from_cache: bool = False
     cache_similarity: Optional[float] = None
+    sources: list[SourceReference] = []
 
 
 class FeedbackRequest(BaseModel):

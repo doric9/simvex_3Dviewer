@@ -1,7 +1,7 @@
 """Explainer Agent - Explains machinery concepts to students."""
 
 from app.agents.base import BaseAgent
-from app.agents.prompts import get_explainer_prompt, EXPLAINER_BASE_PROMPT
+from app.agents.prompts import get_explainer_prompt, EXPLAINER_BASE_PROMPT, RAG_CONTEXT_PROMPT
 from app.data.machinery import get_machinery_context
 
 
@@ -17,6 +17,7 @@ class ExplainerAgent(BaseAgent):
         user_message: str,
         conversation_history: list[dict] | None = None,
         user_id: str | None = None,
+        rag_context: str | None = None,
     ) -> tuple[str, list[str]]:
         """
         Explain machinery concepts to the user.
@@ -26,6 +27,7 @@ class ExplainerAgent(BaseAgent):
             user_message: The user's message
             conversation_history: Optional conversation history
             user_id: Optional user ID for rate limiting
+            rag_context: Optional RAG context from knowledge base
 
         Returns:
             tuple: (response_text, topics_discussed)
@@ -36,6 +38,10 @@ class ExplainerAgent(BaseAgent):
 
         # Build full system prompt with context
         system_prompt = f"{base_prompt}\n\n{EXPLAINER_BASE_PROMPT.format(machinery_context=machinery_context)}"
+
+        # Append RAG context if available
+        if rag_context:
+            system_prompt += RAG_CONTEXT_PROMPT.format(rag_context=rag_context)
 
         # Build messages
         messages = self._build_messages(
@@ -59,6 +65,7 @@ class ExplainerAgent(BaseAgent):
         user_message: str,
         conversation_history: list[dict] | None = None,
         user_id: str | None = None,
+        rag_context: str | None = None,
     ):
         """
         Stream explanation to the user, yielding tokens as they arrive.
@@ -68,6 +75,7 @@ class ExplainerAgent(BaseAgent):
             user_message: The user's message
             conversation_history: Optional conversation history
             user_id: Optional user ID for rate limiting
+            rag_context: Optional RAG context from knowledge base
 
         Yields:
             Text chunks as they arrive from the LLM
@@ -78,6 +86,10 @@ class ExplainerAgent(BaseAgent):
 
         # Build full system prompt with context
         system_prompt = f"{base_prompt}\n\n{EXPLAINER_BASE_PROMPT.format(machinery_context=machinery_context)}"
+
+        # Append RAG context if available
+        if rag_context:
+            system_prompt += RAG_CONTEXT_PROMPT.format(rag_context=rag_context)
 
         # Build messages
         messages = self._build_messages(

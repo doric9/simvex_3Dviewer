@@ -69,6 +69,27 @@ QUIZ_FEEDBACK_PROMPT = """학생이 다음 퀴즈에 답했습니다:
 """
 
 
+RAG_CONTEXT_PROMPT = """
+
+아래는 관련 참고 자료입니다. 이 자료를 바탕으로 정확하고 깊이 있는 답변을 해주세요.
+답변에 참고 자료를 활용한 경우, 답변 끝에 [참고: 출처명] 형식으로 출처를 표기해주세요.
+
+---참고 자료---
+{rag_context}
+---참고 자료 끝---
+"""
+
+QUIZ_RAG_CONTEXT_PROMPT = """
+
+아래 참고 자료를 활용하여 더 깊이 있고 실용적인 퀴즈 문제를 생성해주세요.
+단순 암기가 아닌, 이해력과 응용력을 평가하는 문제를 만들어주세요.
+
+---참고 자료---
+{rag_context}
+---참고 자료 끝---
+"""
+
+
 def get_explainer_prompt(machinery_id: str) -> str:
     return EXPLAINER_SYSTEM_PROMPTS.get(
         machinery_id, "당신은 기계공학 전문가입니다."
