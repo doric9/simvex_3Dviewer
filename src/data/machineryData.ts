@@ -102,16 +102,7 @@ export const machineryData: Record<string, Machinery> = {
         explodeDirection: [0, 1, 0],
         assemblyOffset: [0, 6, 0]  // v0.3.2: ROD 높이 고려
       },
-      // ✅ NIT: 스프링 위 (빨간 조정 칼라)
-      {
-        name: 'NIT',
-        file: '/models/Suspension/NIT.glb',
-        material: 'Steel',
-        role: '빨간 기어',
-        position: [0, 60, 0],
-        explodeDirection: [0, 1, 0],
-        assemblyOffset: [0, 12, 0]  // v0.3.2: SPRING 높이 고려
-      },
+
       // ✅ NUT: 맨 위 (상단 캡)
       {
         name: 'NUT',

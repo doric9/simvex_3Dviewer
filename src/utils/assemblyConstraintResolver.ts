@@ -19,14 +19,48 @@ export class AssemblyConstraintResolver {
     }
 
     /**
+     * Update part constraint dynamically (e.g. from AI)
+     */
+    updatePartConstraint(partName: string, constraint: AssemblyConstraint): void {
+        const part = this.parts.get(partName);
+        if (part) {
+            part.constraint = constraint;
+            // Clear cache for this part to force re-calculation
+            this.resolvedPositions.delete(partName);
+        } else {
+            console.warn(`[Resolver] Cannot update constraint: Part ${partName} not found`);
+        }
+    }
+
+    /**
      * 메쉬 등록 (ModelGroup에서 로드 후 호출)
      */
-    registerMesh(partName: string, mesh: THREE.Object3D): void {
+    registerMesh(partName: string, mesh: THREE.Object3D, logicalScale: number = 1.0): void {
+        this.parts.get(partName); // just check existence
         this.meshCache.set(partName, mesh);
 
-        // BoundingBox 계산 및 캐싱
+        // 1. 임시로 Scale 초기화하여 원본(Raw) BBox 계산
+        const originalScale = mesh.scale.clone();
+        mesh.scale.set(1, 1, 1);
+        mesh.updateMatrixWorld(true); // Force update
+
         const box = new THREE.Box3().setFromObject(mesh);
+
+        // 2. Scale 복구
+        mesh.scale.copy(originalScale);
+        mesh.updateMatrixWorld(true);
+
+        // 3. 논리적 스케일 적용 (Logical Scale)
+        if (logicalScale !== 1.0) {
+            box.min.multiplyScalar(logicalScale);
+            box.max.multiplyScalar(logicalScale);
+        }
+
         this.boundingBoxCache.set(partName, box);
+        // console.log(`[Resolver] Registered ${partName} bbox:`, box);
+
+        // 위치 재계산 필요하므로 캐시 초기화
+        this.resolvedPositions.clear();
 
         const size = box.getSize(new THREE.Vector3());
         console.log(`[Resolver] ${partName} BBox 등록:`, {
@@ -34,6 +68,32 @@ export class AssemblyConstraintResolver {
             max: { x: box.max.x.toFixed(2), y: box.max.y.toFixed(2), z: box.max.z.toFixed(2) },
             size: { x: size.x.toFixed(2), y: size.y.toFixed(2), z: size.z.toFixed(2) }
         });
+    }
+
+    /**
+     * 전체 스케일 설정 및 BBox 재계산
+     */
+    setGlobalScale(scale: number): void {
+        console.log(`[Resolver] Updating global scale to ${scale}`);
+        this.meshCache.forEach((mesh, partName) => {
+            // 1. 임시로 Scale 초기화하여 원본(Raw) BBox 계산
+            const originalScale = mesh.scale.clone();
+            mesh.scale.set(1, 1, 1);
+            mesh.updateMatrixWorld(true);
+
+            const box = new THREE.Box3().setFromObject(mesh);
+
+            // 2. Scale 복구
+            mesh.scale.copy(originalScale);
+            mesh.updateMatrixWorld(true);
+
+            // 3. 새 스케일 적용
+            box.min.multiplyScalar(scale);
+            box.max.multiplyScalar(scale);
+
+            this.boundingBoxCache.set(partName, box);
+        });
+        this.resolvedPositions.clear();
     }
 
     /**
@@ -145,30 +205,54 @@ export class AssemblyConstraintResolver {
         // 부모 위치 재귀 계산
         const parentPos = this.resolvePosition(parentPart);
 
-        // ⭐ 핵심: offset.y가 없거나 0이면 부모 높이로 자동 계산
+        // ⭐ 물리 기반 스택킹: BoundingBox Top <-> Bottom 정렬
+        // 1. 부모의 최상단 Y (World 좌표계 기준)
+        const parentBox = this.boundingBoxCache.get(parentName);
+        // 부모 박스가 없으면 높이만 더하는 방식으로 fallback (기존 로직)
+        if (!parentBox) {
+            const height = this.getPartHeight(parentName);
+            const manualOffset = constraint.offset || [0, 0, 0];
+            return parentPos.clone().add(new THREE.Vector3(manualOffset[0], height + manualOffset[1], manualOffset[2]));
+        }
+
+        // 주의: parentBox는 Local 좌표계(메쉬 원점 기준)임.
+        // 우리는 부모가 놓인 위치(parentPos)를 알고 있음.
+        // 부모의 World Max Y = parentPos.y + parentBox.max.y (Scaling 고려 안함. 1.0 가정)
+        const parentTopY = parentBox.max.y; // 로컬 최상단
+
+        // 2. 자식의 최하단 Y (Local 좌표계 기준)
+        const childBox = this.boundingBoxCache.get(part.name);
+        const childBottomY = childBox ? childBox.min.y : 0; // 자식 박스 없으면 0 가정
+
+        // 3. 정렬 위치 계산
+        // 목표: Child World Y + Child Bottom Y = Parent World Y + Parent Top Y
+        // Child World Y = Parent World Y + Parent Top Y - Child Bottom Y
+
         const manualOffset = constraint.offset || [0, 0, 0];
-        const autoOffsetY = manualOffset[1] !== 0
-            ? manualOffset[1]  // 수동 offset이 있으면 사용
-            : this.getPartHeight(parentName);  // ← 자동 계산!
+
+        // 자동 계산된 Y 오프셋 (부모 Top - 자식 Bottom)
+        const autoOffsetY = parentTopY - childBottomY;
+
+        // 최종 오프셋 적용 (수동 오프셋이 있으면 추가)
+        const finalOffsetY = manualOffset[1] !== 0 ? manualOffset[1] : autoOffsetY;
 
         const offset = new THREE.Vector3(
             manualOffset[0],
-            autoOffsetY,
+            finalOffsetY,
             manualOffset[2]
         );
 
-        console.log(`[StackedOn] ${part.name} → ${parentName}:`, {
-            parentHeight: this.getPartHeight(parentName).toFixed(2),
+        console.log(`[StackedOn] ${part.name} on ${parentName}:`, {
+            parentTopY: parentTopY.toFixed(2),
+            childBottomY: childBottomY.toFixed(2),
+            autoOffsetY: autoOffsetY.toFixed(2),
             manualOffset: manualOffset[1],
-            finalOffset: autoOffsetY.toFixed(2),
             finalPos: {
-                x: (parentPos.x + offset.x).toFixed(2),
-                y: (parentPos.y + offset.y).toFixed(2),
-                z: (parentPos.z + offset.z).toFixed(2)
+                y: (parentPos.y + finalOffsetY).toFixed(2)
             }
         });
 
-        return parentPos.clone().add(offset);
+        return parentPos.clone().add(new THREE.Vector3(offset.x, finalOffsetY, offset.z));
     }
 
     /**

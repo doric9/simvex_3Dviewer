@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v0.5.0] - 2026-02-08
+
+### Added
+- **Suspension 정밀 조립 애니메이션 완성**
+  - **조립 우선 로직**: 슬라이더 0%를 '완전 조립' 상태로 고정하여 사용자 경험 개선
+  - **정밀 좌표 시스템**: Nut(19.8), Rod(21.0), Spring(0.0) 등 소수점 단위 정밀 위치값 반영
+  - **너트 회전(Unscrewing) 효과**: 분해 초기(0~40%) 구간에서 너트가 Y축으로 회전하며 풀려나오는 시각적 디테일 추가
+  - **분해 속도 캘리브레이션**: 슬라이더 40% 지점에서 너트가 나사산 끝에 정확히 도달하도록 이동 속도 정밀 조정
+
+### Improved
+- **Viewer UI**
+  - 페이지 진입 시 항상 조립 완료(0%) 상태로 초기화되도록 수정
+  - AI 분석 상태 표시줄 버전 태그 업데이트 (`v0.5.0 Final Release`)
+
 ## [v0.4.1] - 2026-02-08
 
 ### Added

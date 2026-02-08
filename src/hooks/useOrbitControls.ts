@@ -31,7 +31,7 @@ export function useOrbitControls() {
             minDistance: 10,
             maxDistance: 500,
             minPolarAngle: 0,
-            maxPolarAngle: Math.PI / 1.8, // Prevent going too far under the floor
+            maxPolarAngle: Math.PI, // Allow full spherical rotation (0 to 180 degrees)
             rotateSpeed: 1.0,
             panSpeed: 1.2,
             zoomSpeed: 1.2,
