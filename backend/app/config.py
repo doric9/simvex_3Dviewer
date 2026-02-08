@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from functools import lru_cache
 
 
@@ -18,6 +19,16 @@ class Settings(BaseSettings):
 
     # App
     debug: bool = True
+    port: int = 8000  # Render injects PORT env var
+
+    @model_validator(mode="after")
+    def convert_database_url(self) -> "Settings":
+        """Convert Render's postgres:// to postgresql+asyncpg:// for SQLAlchemy async."""
+        if self.database_url.startswith("postgres://"):
+            self.database_url = self.database_url.replace(
+                "postgres://", "postgresql+asyncpg://", 1
+            )
+        return self
 
     @property
     def cors_origins_list(self) -> list[str]:
