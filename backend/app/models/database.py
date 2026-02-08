@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import String, Integer, Float, Text, DateTime, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
 
 from app.config import get_settings
 
@@ -147,7 +147,7 @@ def _create_engine():
         return create_async_engine(
             settings.database_url,
             echo=settings.debug,
-            poolclass=QueuePool,
+            poolclass=AsyncAdaptedQueuePool,
             pool_size=settings.db_pool_size,
             max_overflow=settings.db_max_overflow,
             pool_pre_ping=True,  # Verify connections before use
