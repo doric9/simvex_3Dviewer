@@ -222,6 +222,14 @@ git commit -m "refactor: useModelLoader 성능 최적화"
 
 ---
 
+### 🕹️ 조작 가이드 (Interaction)
+- **우클릭 (Right Click)**: 3D 모델 자유 회전 (기획서 표준)
+- **좌클릭 (Left Click)**: 화면 이동 (Pan)
+- **스크롤 (Scroll)**: 줌 인/아웃
+- **더블 클릭**: 카메라 초기화
+
+---
+
 ## 📄 라이센스
 
 MIT License
@@ -234,7 +242,7 @@ MIT License
 
 ---
 
-**⚡ 현재 버전**: v0.5.0  
+**⚡ 현재 버전**: v0.5.1  
 **🚀 최종 목표**: 완전한 3D 기계 교육 플랫폼
 
 ---

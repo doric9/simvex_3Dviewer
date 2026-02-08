@@ -23,14 +23,22 @@ interface Scene3DProps {
 }
 
 export default function Scene3D({ machinery }: Scene3DProps) {
-  const { physicsEnabled, showGrid, explodeFactor, selectedPart, setSelectedPart } = useViewerStore();
+  const {
+    physicsEnabled,
+    showGrid,
+    explodeFactor,
+    selectedPart,
+    setSelectedPart,
+    cameraPosition,
+    cameraTarget
+  } = useViewerStore();
 
   // 🎣 Hook 1: 씬 설정 (본인)
   const { lightingConfig, environment } = useSceneSetup();
 
   return (
     <Canvas shadows>
-      <PerspectiveCamera makeDefault position={[100, 100, 100]} fov={50} />
+      <PerspectiveCamera makeDefault position={cameraPosition as [number, number, number]} fov={50} />
 
       {/* 네비게이션 기즈모 (UX 개선: 컨트롤 가이드와 겹침 방지를 위해 우측 상단 배치) */}
       <GizmoHelper
@@ -80,6 +88,12 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       {/* 카메라 컨트롤 (TrackballControls: 자유 회전 + 패닝 보장) */}
       <TrackballControls
         makeDefault
+        target={cameraTarget as [number, number, number]}
+        mouseButtons={{
+          LEFT: 2, // PAN
+          MIDDLE: 1, // ZOOM
+          RIGHT: 0  // ROTATE (Requirement: Right-click Rotate)
+        }}
         noRotate={false}
         noZoom={false}
         noPan={false}
@@ -88,6 +102,19 @@ export default function Scene3D({ machinery }: Scene3DProps) {
         panSpeed={0.8}
         staticMoving={true}
         dynamicDampingFactor={0.2}
+        onChange={(e: any) => {
+          // Update store with current camera state for persistence
+          const controller = e?.target;
+          if (controller && controller.object) {
+            const cam = controller.object;
+            const target = controller.target;
+            // Update store directly to avoid re-renders while interacting
+            useViewerStore.getState().setCameraPosition([cam.position.x, cam.position.y, cam.position.z]);
+            if (target) {
+              useViewerStore.getState().setCameraTarget([target.x, target.y, target.z]);
+            }
+          }
+        }}
       />
 
       {/* 그리드 */}
