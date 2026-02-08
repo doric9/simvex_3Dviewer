@@ -13,19 +13,33 @@ export const machineryData: Record<string, Machinery> = {
 4. 배기: 연소 가스 배출
 
 **주요 부품:**
-- Piston: 왕복 운동하며 압력 생성
+- Piston (x4): 왕복 운동하며 압력 생성
 - Crankshaft: 피스톤의 직선 운동을 회전 운동으로 변환
 - Connecting Rod: 피스톤과 크랭크샤프트 연결
 `,
     thumbnail: '/models/V4_Engine/V4실린더 엔진 조립도.png',
     parts: [
-      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '왕복 운동으로 압력 생성' },
-      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '회전 운동 변환' },
-      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '피스톤과 크랭크샤프트 연결', parent: 'Crankshaft' },
-      { name: 'Connecting Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '연결봉 고정' },
-      { name: 'Conrod Bolt', file: '/models/V4_Engine/Conrod Bolt.glb', material: 'Steel', role: '볼트 체결' },
-      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 핀' },
-      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '밀봉 링' },
+      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '회전 운동 변환', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+
+      // Bank 1 (Left 1)
+      { name: 'Piston L1', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '1번 실린더 피스톤', position: [-20, 45, 0], explodeDirection: [-0.5, 1, 0] },
+      { name: 'Rod L1', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '1번 커넥팅 로드', position: [-10, 15, 0], explodeDirection: [-0.3, 1, 0] },
+      { name: 'Pin L1', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '1번 피스톤 핀', position: [-20, 45, 0], explodeDirection: [0, 0, 1] },
+
+      // Bank 2 (Right 1)
+      { name: 'Piston R1', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '2번 실린더 피스톤', position: [20, 45, 20], explodeDirection: [0.5, 1, 0] },
+      { name: 'Rod R1', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '2번 커넥팅 로드', position: [10, 15, 20], explodeDirection: [0.3, 1, 0] },
+      { name: 'Pin R1', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '2번 피스톤 핀', position: [20, 45, 20], explodeDirection: [0, 0, 1] },
+
+      // Bank 3 (Left 2)
+      { name: 'Piston L2', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '3번 실린더 피스톤', position: [-20, 45, 40], explodeDirection: [-0.5, 1, 0] },
+      { name: 'Rod L2', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '3번 커넥팅 로드', position: [-10, 15, 40], explodeDirection: [-0.3, 1, 0] },
+
+      // Bank 4 (Right 2)
+      { name: 'Piston R2', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '4번 실린더 피스톤', position: [20, 45, 60], explodeDirection: [0.5, 1, 0] },
+      { name: 'Rod R2', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '4번 커넥팅 로드', position: [10, 15, 60], explodeDirection: [0.3, 1, 0] },
+
+      { name: 'Main Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '로드 캡', position: [0, -5, 30], explodeDirection: [0, -1, 0] },
     ],
   },
   Drone: {
@@ -41,19 +55,28 @@ export const machineryData: Record<string, Machinery> = {
 
 **주요 부품:**
 - Main Frame: 드론 본체
-- Impeller Blade: 추진력 생성
+- Impeller Blade (x4): 추진력 생성
 - Gearing: 동력 전달
 `,
     thumbnail: '/models/Drone/조립도1.png',
     parts: [
-      { name: 'Main frame', file: '/models/Drone/Main frame.glb', material: 'Carbon Fiber', role: '드론 본체' },
-      { name: 'Arm gear', file: '/models/Drone/Arm gear.glb', material: 'Plastic', role: '암 기어' },
-      { name: 'Beater disc', file: '/models/Drone/Beater disc.glb', material: 'Plastic', role: '비터 디스크' },
-      { name: 'Gearing', file: '/models/Drone/Gearing.glb', material: 'Metal', role: '기어 시스템' },
-      { name: 'Impellar Blade', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '프로펠러' },
-      { name: 'Leg', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '착륙 다리' },
-      { name: 'Nut', file: '/models/Drone/Nut.glb', material: 'Metal', role: '너트' },
-      { name: 'Screw', file: '/models/Drone/Screw.glb', material: 'Metal', role: '나사' },
+      { name: 'Main frame', file: '/models/Drone/Main frame.glb', material: 'Carbon Fiber', role: '드론 본체', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+
+      // Propeller 1 (FR)
+      { name: 'Blade FR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 우측 프로펠러', position: [30, 5, 30], explodeDirection: [1, 1, 1] },
+      { name: 'Leg FR', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '전방 우측 다리', position: [30, -15, 30], explodeDirection: [1, -1, 1] },
+
+      // Propeller 2 (FL)
+      { name: 'Blade FL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 좌측 프로펠러', position: [-30, 5, 30], explodeDirection: [-1, 1, 1] },
+      { name: 'Leg FL', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '전방 좌측 다리', position: [-30, -15, 30], explodeDirection: [-1, -1, 1] },
+
+      // Propeller 3 (RR)
+      { name: 'Blade RR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 우측 프로펠러', position: [30, 5, -30], explodeDirection: [1, 1, -1] },
+      { name: 'Leg RR', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '후방 우측 다리', position: [30, -15, -30], explodeDirection: [1, -1, -1] },
+
+      // Propeller 4 (RL)
+      { name: 'Blade RL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 좌측 프로펠러', position: [-30, 5, -30], explodeDirection: [-1, 1, -1] },
+      { name: 'Leg RL', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '후방 좌측 다리', position: [-30, -15, -30], explodeDirection: [-1, -1, -1] },
     ],
   },
   Suspension: {
@@ -130,13 +153,10 @@ export const machineryData: Record<string, Machinery> = {
 `,
     thumbnail: '/models/Leaf Spring/판스프링 조립도.png',
     parts: [
-      { name: 'Leaf-Layer', file: '/models/Leaf Spring/Leaf-Layer.glb', material: 'Spring Steel', role: '판 레이어' },
-      { name: 'Clamp-Primary', file: '/models/Leaf Spring/Clamp-Primary.glb', material: 'Steel', role: '1차 클램프' },
-      { name: 'Clamp-Secondary', file: '/models/Leaf Spring/Clamp-Secondary.glb', material: 'Steel', role: '2차 클램프' },
-      { name: 'Clamp-Center', file: '/models/Leaf Spring/Clamp-Center.glb', material: 'Steel', role: '중앙 클램프' },
-      { name: 'Support', file: '/models/Leaf Spring/Support.glb', material: 'Steel', role: '서포트' },
-      { name: 'Support-Chassis', file: '/models/Leaf Spring/Support-Chassis.glb', material: 'Steel', role: '섀시 서포트' },
-      { name: 'Support-Rubber', file: '/models/Leaf Spring/Support-Rubber.glb', material: 'Rubber', role: '고무 서포트' },
+      { name: 'Leaf-Layer', file: '/models/Leaf Spring/Leaf-Layer.glb', material: 'Spring Steel', role: '판 레이어', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Clamp-Primary', file: '/models/Leaf Spring/Clamp-Primary.glb', material: 'Steel', role: '1차 클램프', position: [0, 10, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 5, 0] },
+      { name: 'Clamp-Secondary', file: '/models/Leaf Spring/Clamp-Secondary.glb', material: 'Steel', role: '2차 클램프', position: [0, 15, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 8, 0] },
+      { name: 'Support', file: '/models/Leaf Spring/Support.glb', material: 'Steel', role: '서포트', position: [0, -5, 0], explodeDirection: [0, -1, 0], assemblyOffset: [0, -5, 0] },
     ],
   },
   'Machine Vice': {
@@ -154,14 +174,10 @@ export const machineryData: Record<string, Machinery> = {
 `,
     thumbnail: '/models/Machine Vice/공작 기계 바이스.jpg',
     parts: [
-      { name: 'Part1', file: '/models/Machine Vice/Part1.glb', material: 'Cast Iron', role: '본체' },
-      { name: 'Part1 Fuhrung', file: '/models/Machine Vice/Part1 Fuhrung.glb', material: 'Steel', role: '가이드' },
-      { name: 'Part2 Feste Backe', file: '/models/Machine Vice/Part2 Feste Backe.glb', material: 'Steel', role: '고정 조' },
-      { name: 'Part3-lose backe', file: '/models/Machine Vice/Part3-lose backe.glb', material: 'Steel', role: '이동 조' },
-      { name: 'Part4 spindelsockel', file: '/models/Machine Vice/Part4 spindelsockel.glb', material: 'Steel', role: '스핀들 소켓' },
-      { name: 'Part5-Spannbacke', file: '/models/Machine Vice/Part5-Spannbacke.glb', material: 'Steel', role: '클램프 조' },
-      { name: 'Part6-fuhrungschiene', file: '/models/Machine Vice/Part6-fuhrungschiene.glb', material: 'Steel', role: '가이드 레일' },
-      { name: 'Part7-TrapezSpindel', file: '/models/Machine Vice/Part7-TrapezSpindel.glb', material: 'Steel', role: '트라페즈 스핀들' },
+      { name: 'Body', file: '/models/Machine Vice/Part1.glb', material: 'Cast Iron', role: '본체', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Fixed Jaw', file: '/models/Machine Vice/Part2 Feste Backe.glb', material: 'Steel', role: '고정 조', position: [0, 10, 20], explodeDirection: [0, 0, 1], assemblyOffset: [0, 0, 10] },
+      { name: 'Movable Jaw', file: '/models/Machine Vice/Part3-lose backe.glb', material: 'Steel', role: '이동 조', position: [0, 10, -20], explodeDirection: [0, 0, -1], assemblyOffset: [0, 0, -15] },
+      { name: 'Spindle', file: '/models/Machine Vice/Part7-TrapezSpindel.glb', material: 'Steel', role: '트라페즈 스핀들', position: [0, 5, -40], explodeDirection: [0, 0, -1], assemblyOffset: [0, 0, -25] },
     ],
   },
   'Robot Arm': {
@@ -181,14 +197,12 @@ export const machineryData: Record<string, Machinery> = {
 `,
     thumbnail: '/models/Robot Arm/로봇팔 조립도.png',
     parts: [
-      { name: 'base', file: '/models/Robot Arm/base.glb', material: 'Aluminum', role: '베이스' },
-      { name: 'Part2', file: '/models/Robot Arm/Part2.glb', material: 'Aluminum', role: '1번 링크' },
-      { name: 'Part3', file: '/models/Robot Arm/Part3.glb', material: 'Aluminum', role: '2번 링크' },
-      { name: 'Part4', file: '/models/Robot Arm/Part4.glb', material: 'Aluminum', role: '3번 링크' },
-      { name: 'Part5', file: '/models/Robot Arm/Part5.glb', material: 'Aluminum', role: '4번 링크' },
-      { name: 'Part6', file: '/models/Robot Arm/Part6.glb', material: 'Aluminum', role: '5번 링크' },
-      { name: 'Part7', file: '/models/Robot Arm/Part7.glb', material: 'Aluminum', role: '6번 링크' },
-      { name: 'Part8', file: '/models/Robot Arm/Part8.glb', material: 'Aluminum', role: '엔드 이펙터' },
+      { name: 'Base', file: '/models/Robot Arm/base.glb', material: 'Aluminum', role: '베이스', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Joint 1', file: '/models/Robot Arm/Part2.glb', material: 'Aluminum', role: '1번 관절', position: [0, 10, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 5, 0] },
+      { name: 'Link 1', file: '/models/Robot Arm/Part3.glb', material: 'Aluminum', role: '1번 링크', position: [0, 25, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 10, 0] },
+      { name: 'Joint 2', file: '/models/Robot Arm/Part4.glb', material: 'Aluminum', role: '2번 관절', position: [0, 45, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 15, 0] },
+      { name: 'Link 2', file: '/models/Robot Arm/Part5.glb', material: 'Aluminum', role: '2번 링크', position: [0, 60, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 25, 0] },
+      { name: 'End Effector', file: '/models/Robot Arm/Part8.glb', material: 'Aluminum', role: '엔드 이펙터', position: [0, 85, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 35, 0] },
     ],
   },
   'Robot Gripper': {
@@ -209,13 +223,10 @@ export const machineryData: Record<string, Machinery> = {
 `,
     thumbnail: '/models/Robot Gripper/로봇집게 조립도.png',
     parts: [
-      { name: 'Base Plate', file: '/models/Robot Gripper/Base Plate.glb', material: 'Aluminum', role: '베이스 플레이트' },
-      { name: 'Base Gear', file: '/models/Robot Gripper/Base Gear.glb', material: 'Steel', role: '베이스 기어' },
-      { name: 'Base Mounting bracket', file: '/models/Robot Gripper/Base Mounting bracket.glb', material: 'Aluminum', role: '마운팅 브래킷' },
-      { name: 'Gripper', file: '/models/Robot Gripper/Gripper.glb', material: 'Aluminum', role: '그리퍼' },
-      { name: 'Link', file: '/models/Robot Gripper/Link.glb', material: 'Aluminum', role: '링크' },
-      { name: 'Gear link 1', file: '/models/Robot Gripper/Gear link 1.glb', material: 'Steel', role: '기어 링크 1' },
-      { name: 'Gear link 2', file: '/models/Robot Gripper/Gear link 2.glb', material: 'Steel', role: '기어 링크 2' },
+      { name: 'Base Plate', file: '/models/Robot Gripper/Base Plate.glb', material: 'Aluminum', role: '베이스 플레이트', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Mounting Bracket', file: '/models/Robot Gripper/Base Mounting bracket.glb', material: 'Aluminum', role: '마운팅 브래킷', position: [0, 10, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 5, 0] },
+      { name: 'Gripper Jaw', file: '/models/Robot Gripper/Gripper.glb', material: 'Aluminum', role: '그리퍼 조', position: [15, 25, 0], explodeDirection: [1, 1, 0], assemblyOffset: [10, 10, 0] },
+      { name: 'Linkage', file: '/models/Robot Gripper/Link.glb', material: 'Aluminum', role: '링크 기구', position: [0, 25, 0], explodeDirection: [0, 1, 0], assemblyOffset: [0, 15, 0] },
     ],
   },
 };
