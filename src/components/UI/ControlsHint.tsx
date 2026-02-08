@@ -32,11 +32,11 @@ const ControlsHint = () => {
                     <div className="space-y-1.5">
                         <div className="flex justify-between">
                             <span>좌클릭</span>
-                            <span className="text-white font-medium">회전</span>
+                            <span className="text-white font-medium">이동</span>
                         </div>
                         <div className="flex justify-between">
                             <span>우클릭</span>
-                            <span className="text-red-300 font-medium">이동</span>
+                            <span className="text-red-300 font-medium">회전</span>
                         </div>
                         <div className="flex justify-between">
                             <span>휠</span>

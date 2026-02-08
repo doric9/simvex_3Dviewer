@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v0.5.1] - 2026-02-09
+
+### Fixed
+- **MVP 조작 규격 준수 (Right-click Rotate)**: 기획서 요구 사양에 맞춰 마우스 컨트롤 맵핑 수정 (우클릭: 회전, 좌클릭: 이동).
+- **데이터 보존(Persistence) 강화**: 페이지 새로고침 시에도 이전의 카메라 위치 및 줌 상태가 완벽하게 복원되도록 수정.
+- **UI/UX 폴리싱**: 조작 가이드 아이콘 및 설명 문구 업데이트.
+
+### Added
+- **EVALUATION_CHECK.md**: 해커톤 기획서 요건 대비 구현 현황 문서 추가.
+
 ## [v0.5.0] - 2026-02-08
 
 ### Added
