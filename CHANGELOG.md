@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v0.4.1] - 2026-02-08
+
+### Added
+- **Deployment & Infrastructure (PR #11)**
+  - Backend Dockerization: `Dockerfile` 및 `start.sh` 추가
+  - Render.com 배포 지원: `render.yaml` 설정 파일 추가
+  - 환경 변수 템플릿 고도화: `.env.example`, `backend/.env.example` 업데이트
+  - Backend 환경 설정 최적화: `app/config.py` 및 `models/database.py` 수정
+
 ## [v0.4.0] - 2026-02-07
 
 ### Added
