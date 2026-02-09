@@ -49,10 +49,10 @@ export default function Scene3D({ machinery }: Scene3DProps) {
       <KeyboardController controlsRef={controlsRef} />
       <PerspectiveCamera makeDefault position={[100, 100, 100]} fov={50} />
 
-      {/* 네비게이션 기즈모 (UX 개선: 사이드바 겹침 방지를 위해 왼쪽 하단 배치) */}
+      {/* 네비게이션 기즈모 (UX 개선: 컨트롤 가이드와 겹침 방지를 위해 우측 상단 배치) */}
       <GizmoHelper
-        alignment="bottom-left"
-        margin={[80, 80]}
+        alignment="top-right"
+        margin={[100, 100]}
       >
         <GizmoViewport axisColors={['#ff3653', '#0adb46', '#2c8fff']} labelColor="white" />
       </GizmoHelper>
