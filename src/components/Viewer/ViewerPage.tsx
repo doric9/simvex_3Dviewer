@@ -16,7 +16,7 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
   const { selectedPart, explodeFactor, setExplodeFactor } = useViewerStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // [User Request] Ensure 0% (Assembled) is the default state when entering
+  // Ensure 0% (Assembled) is the default state when entering
   useEffect(() => {
     setExplodeFactor(0);
   }, [setExplodeFactor]);
@@ -68,11 +68,8 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
-
-
     </div>
   );
 }
 
 // GestureHint removed in favor of global ControlsHint
-

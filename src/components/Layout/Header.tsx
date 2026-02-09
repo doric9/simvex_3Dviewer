@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Network, MoreVertical, FileDown, Share2, Settings, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Network, MoreVertical, FileDown, Share2, Settings, RefreshCcw, Box } from 'lucide-react';
 import { machineryData } from '../../data/machineryData';
 import { resetUserAccount } from '../../utils/aiService';
 import { getAnonymousUserId } from '../../utils/user';
@@ -74,22 +74,29 @@ export default function Header({
   };
 
   return (
-    <header className="bg-white shadow-md px-6 py-4 flex items-center justify-between z-50">
+    <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between z-50">
       <div className="flex items-center gap-4">
         {currentPage !== 'home' && (
           <button
             onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100/50 rounded-xl transition-all hover:scale-110 active:scale-95"
             title="홈으로"
           >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
         )}
-        <div>
-          <h1 className="text-2xl font-bold text-primary">SIMVEX</h1>
-          {machinery && (
-            <p className="text-sm text-gray-600">{machinery.name}</p>
-          )}
+        <div className="flex items-center gap-2.5 group cursor-pointer" onClick={() => currentPage !== 'home' && onBack()}>
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+            <Box className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-black text-gray-900 tracking-tight leading-none">SIMVEX</h1>
+            {machinery ? (
+              <p className="text-[10px] font-bold text-primary/70 uppercase tracking-wider mt-1 line-clamp-1">{machinery.name}</p>
+            ) : (
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">3D Learning Hub</p>
+            )}
+          </div>
         </div>
       </div>
 
