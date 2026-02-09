@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from 'openai';
 
 // src/utils/aiAssemblyService.ts
-import { AssemblyConstraint, AssemblyConstraintType } from '../types';
+import { AssemblyConstraint } from '../types';
 
 export interface AIAssemblyResult {
   basePart: string;
@@ -77,12 +77,12 @@ export class AIAssemblyService {
     const {
       useCache = true,
       cacheExpiry = 24 * 60 * 60 * 1000, // 24시간
-      temperature = 0.1,
+      // temperature = 0.1, // temperature is not used here, only passed to callGPT4Vision which is currently disabled
       maxRetries = 2
     } = options;
 
     // Check cache
-    const cacheKeyVersion = 'v10_assembled_'; // Campatibility break to force re-analysis
+    const cacheKeyVersion = 'v11_assembled_'; // Campatibility break to force re-analysis
     if (useCache) {
       const cached = this.getFromCache(cacheKeyVersion + machineryId, cacheExpiry);
       if (cached) return cached;
@@ -188,48 +188,6 @@ export class AIAssemblyService {
     return parsed;
   }
 
-  /**
-   * GPT-4 Vision API 호출
-   */
-  private async callGPT4Vision(
-    imageUrl: string,
-    partIds: string[],
-    temperature: number
-  ): Promise<AIAssemblyResult> {
-    if (!this.openai) {
-      throw new Error('OpenAI client not initialized');
-    }
-
-    const prompt = this.buildPrompt(partIds);
-
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: { url: imageUrl, detail: "high" }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1500,
-      temperature
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error('Empty response from GPT-4');
-    }
-
-    const result = this.parseResponse(content);
-    this.validateResult(result, partIds);
-    result.timestamp = Date.now();
-    return result;
-  }
 
   private buildPrompt(partIds: string[]): string {
     return `You are a CAD assembly expert. Analyze this mechanical assembly diagram.
