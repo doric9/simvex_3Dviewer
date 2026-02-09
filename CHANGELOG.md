@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v0.5.2] - 2026-02-09
+
+### Fixed
+- **서스펜션(Suspension) 모델 완벽 복원**: v0.5.0의 정밀 좌표 및 스택 순서([BASE, SPRING, NUT, ROD]) 원복.
+- **애니메이션 "뭉침(Clumping)" 현상 해결**: 순차적 윈도우 방식을 제거하고, 개별 속도 차등(Differential Velocity)을 적용한 동시 분해 로직으로 회귀하여 유동성 확보.
+- **너트 분해 완결성 수정**: 너트 이동 속도를 정상화하여 슬라이더 100% 지점에서 전개가 멈추는 버그 수정.
+
+### Added
+- **시각적 등간격(Visual Equidistant) 시스템**: 메쉬 부피(스프링 높이 등)를 고려하여 100% 분해 시 모든 부품 사이의 '빈 공간'이 30단위로 동일하게 유지되도록 교정.
+- **Manual-First 기술 결정론**: 서스펜션 등 튜닝된 모델은 AI 분석 대신 `machineryData.ts`의 수동 설정값을 절대적 진실로 사용하도록 강제 (AI 간섭 차단).
+
 ## [v0.5.1] - 2026-02-09
 
 ### Fixed

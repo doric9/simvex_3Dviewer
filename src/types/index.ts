@@ -27,6 +27,8 @@ export interface MachineryPart {
   position?: [number, number, number]; // [x, y, z] for explosion direction calculation
   assemblyOffset?: [number, number, number]; // [x, y, z] visual offset for assembly alignment
   explodeDirection?: [number, number, number]; // Direction vector for explosion (normalized)
+  explodeDistance?: number; // Custom maximum distance for this part
+  explodeSpeed?: number;    // Custom speed multiplier for this part
   isGround?: boolean; // If true, this part stays fixed during explosion
   // v0.3.3: Constraint 기반 조립 시스템
   constraint?: AssemblyConstraint;

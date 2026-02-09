@@ -4,9 +4,8 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Machinery, MachineryPart } from '../../types';
+import { Machinery } from '../../types';
 import { useModelAnimations_ai } from '../../hooks/useModelAnimations_ai';
-import { useModelAnimations } from '../../hooks/useModelAnimations'; // Fallback
 import { AIStatusIndicator } from '../AIStatusIndicator/AIStatusIndicator';
 import { AssemblyConstraintResolver } from '../../utils/assemblyConstraintResolver';
 
@@ -81,7 +80,6 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
 }) => {
   // AI Hook
   const {
-    positions: aiExplodedPositions, // Default exploded positions from hook (fallback for resolver failure)
     loading: aiLoading,
     error: aiError,
     useFallback,
@@ -94,12 +92,6 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
     explodeFactor,
     // If this is Suspension model, use the specific assembly diagram for better AI analysis
     machinery.id === 'Suspension' ? '/models/Suspension/서스펜션 조립도.png' : machinery.thumbnail
-  );
-
-  // Fallback Hook
-  const { calculateExplodePosition } = useModelAnimations(
-    explodeFactor,
-    selectedPart || null
   );
 
   // Resolver State
@@ -185,109 +177,91 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
         return aiPart ? new THREE.Vector3(...aiPart.explodeDirection) : new THREE.Vector3(0, 1, 0);
       };
 
-      resolved.forEach((pos, id) => {
+      resolved.forEach((resPos, id) => {
         const dir = getExplodeDir(id);
 
-        // Find part index in assembly order (default to 0 if not found)
-        // Normalize for robust finding
-        const normalize = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '');
-        const idNorm = normalize(id);
-        const orderIndex = aiResult.assemblyOrder.findIndex(o => {
-          const oNorm = normalize(o);
-          return oNorm === idNorm || oNorm.includes(idNorm) || idNorm.includes(oNorm);
-        });
+        const partIndex = machinery.parts.findIndex(p => p.name === id);
+        const sequenceMultiplier = partIndex >= 0 ? partIndex : 0;
 
-        // Sequential Explosion Multiplier (0 for Base, 1 for next, etc.)
-        // Ensure distinct movement for each part in the chain
-        let sequenceMultiplier = orderIndex >= 0 ? orderIndex : 1;
+        const partData = machinery.parts.find(p => p.name === id);
 
-        const isSuspension = machinery.id === 'Suspension' || machinery.name === '서스펜션';
-        const distance = isSuspension ? 6 : 20; // [User Request] Calibrate Suspension speed (Match 12%->40%)
+        // [Manual Priority] 
+        const pos = (partData?.position) ? new THREE.Vector3(...partData.position) : resPos;
 
-        // [User Request] Explosion Animation: 0% = Assembled (Fixed Polarity)
-        const animFactor = explodeFactor;
+        // [Synchronous Differential Velocity - v0.5.0 Reversion]
+        // Every part moves simultaneously over 0-1, but with unique target distances
+        // If custom distance missing, we use (Index * 40) as the technical gap
+        const defaultTargetDistance = sequenceMultiplier * 40;
+        const customDistance = partData?.explodeDistance;
+        const targetDistance = customDistance !== undefined ? customDistance : defaultTargetDistance;
 
-        if (isSuspension) {
-          if (idNorm.includes('spring')) sequenceMultiplier = 2; // Move least
-          if (idNorm.includes('nut')) sequenceMultiplier = 4; // Move middle
-          if (idNorm.includes('rod')) sequenceMultiplier = 6; // Move most (Seperated well at 0%)
-        }
+        const customSpeed = partData?.explodeSpeed ?? 1.0;
+        const animFactor = Math.min(1.0, explodeFactor * customSpeed);
 
-        let initialOffset_or_pos = pos.clone();
-        if (isSuspension && (idNorm.includes('rod') || idNorm === 'rod')) {
-          initialOffset_or_pos = new THREE.Vector3(0, 21.0, 0);
-        } else if (isSuspension && idNorm.includes('spring')) {
-          initialOffset_or_pos = new THREE.Vector3(0, 0, 0);
-        } else if (isSuspension && idNorm.includes('nut')) {
-          initialOffset_or_pos = new THREE.Vector3(0, 19.8, 0);
-        }
+        // Target: Assembled position + (Direction * Distance)
+        const targetPos = pos.clone().add(
+          dir.clone().multiplyScalar(targetDistance)
+        );
 
-        const finalPos = initialOffset_or_pos
-          .add(dir.multiplyScalar(animFactor * distance * sequenceMultiplier)); // Apply animation (Reverse for Suspension)
+        // Movement: Synchronous but distinct due to VELOCITY DIFFERENCE
+        const finalPos = pos.clone().lerp(targetPos, animFactor);
 
         exploded.set(id, finalPos);
       });
       setResolvedPositions(exploded);
     }
-  }, [aiResult, meshCount, explodeFactor, machinery.parts, resolver]); // Dependencies
+  }, [aiResult, meshCount, explodeFactor, machinery.parts, resolver, machinery.id]);
 
-  // Fallback Logic
-  const fallbackPositions = useMemo(() => {
+  // [Gauranteed Technical Animation]
+  // This logic is independent of AI and ensures perfect technical fidelity for "Tuned" models.
+  const manualSequentialPositions = useMemo(() => {
     const map = new Map<string, THREE.Vector3>();
-    const center = new THREE.Vector3(0, 0, 0);
 
-    machinery.parts.forEach(part => {
-      const originalPos = new THREE.Vector3(...(part.position || [0, 0, 0]));
+    machinery.parts.forEach((part, index) => {
+      const id = part.name;
+      const assembledPos = new THREE.Vector3(...(part.position || [0, 0, 0]));
 
-      // [User Request] Ensure fallback also follows forced Y-Axis logic for Suspension
-      let direction = part.explodeDirection;
-      const isSuspension = machinery.id === 'Suspension' || machinery.name === '서스펜션';
-      if (isSuspension) {
-        direction = [0, 1, 0];
+      // Determine explode direction (Manual > AI metadata > Default Up)
+      let dir = new THREE.Vector3(0, 1, 0);
+      if (part.explodeDirection) {
+        dir = new THREE.Vector3(...part.explodeDirection);
+      } else if (aiResult) {
+        // Fallback to AI's direction if manual is missing
+        const aiPart = aiResult.parts.find(p => p.id === id);
+        if (aiPart) dir = new THREE.Vector3(...aiPart.explodeDirection);
       }
 
-      const pos = calculateExplodePosition(
-        originalPos,
-        center,
-        explodeFactor,
-        direction,
-        part.isGround,
-        part.assemblyOffset
+      // [Synchronous Differential Velocity - v0.5.0 Reversion]
+      const defaultTargetDistance = index * 40;
+      const customDistance = part.explodeDistance;
+      const targetDistance = customDistance !== undefined ? customDistance : defaultTargetDistance;
+      const customSpeed = part.explodeSpeed ?? 1.0;
+
+      const animFactor = Math.min(1.0, explodeFactor * customSpeed);
+
+      const finalPos = assembledPos.clone().add(
+        dir.clone().multiplyScalar(targetDistance * animFactor)
       );
 
-      // [User Request] Force Rod Offset in Fallback too
-      const normalize = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '');
-      const idNorm = normalize(part.name);
-
-      const isSuspensionFallback = machinery.id === 'Suspension' || machinery.name === '서스펜션';
-      const animFactorFallback = explodeFactor;
-
-      if (isSuspensionFallback && (idNorm.includes('rod') || idNorm === 'rod')) {
-        const fallbackDistance = 6 * animFactorFallback * 6; // Use calibrated 6
-        pos.set(0, 21.0 + fallbackDistance, 0);
-      } else if (isSuspensionFallback && idNorm.includes('spring')) {
-        const fallbackDistance = 6 * animFactorFallback * 2;
-        pos.set(0, 0 + fallbackDistance, 0);
-      } else if (isSuspensionFallback && idNorm.includes('nut')) {
-        const fallbackDistance = 6 * animFactorFallback * 4;
-        pos.set(0, 19.8 + fallbackDistance, 0);
-      }
-
-      map.set(part.name, pos);
+      map.set(id, finalPos);
     });
     return map;
-  }, [machinery.parts, explodeFactor, calculateExplodePosition, machinery.id, machinery.name]);
+  }, [machinery.parts, explodeFactor, aiResult]);
 
   // Final Merge
   const finalPositions = useMemo(() => {
-    if (useFallback || aiError) return fallbackPositions;
+    // [User Priority] If it's a tuned model like Suspension, ALWAYS use manual sequential logic
+    // or if we have high-confidence manual positions, use them as 'Base Truth'
+    const isTunedModel = ['Suspension', 'V4_Engine', 'Drone'].includes(machinery.id);
 
-    // Prefer Resolved (Stacked) Positions > AI Exploded Positions > Fallback
+    if (isTunedModel) return manualSequentialPositions;
+    if (useFallback || aiError) return manualSequentialPositions;
+
+    // For experimental AI-first models, prioritize resolver result
     if (resolvedPositions.size > 0) return resolvedPositions;
-    if (aiExplodedPositions.size > 0) return aiExplodedPositions;
 
-    return fallbackPositions;
-  }, [resolvedPositions, aiExplodedPositions, fallbackPositions, useFallback, aiError]);
+    return manualSequentialPositions;
+  }, [manualSequentialPositions, resolvedPositions, useFallback, aiError, machinery.id]);
 
   return (
     <group>
@@ -310,9 +284,8 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
         let rotation: [number, number, number] = [0, 0, 0];
 
         if (machinery.id === 'Suspension' && idNorm.includes('nut')) {
-          // Rotate 5 full turns (10*PI) over the first 40% of explosion
-          const rotationFactor = Math.min(explodeFactor / 0.4, 1.0);
-          rotation = [0, rotationFactor * Math.PI * 10, 0];
+          // Synchronous rotation 5 full turns over global factor
+          rotation = [0, explodeFactor * Math.PI * 10, 0];
         }
         // Check if part was matched in AI result
         // const pNorm = normalize(part.name);
