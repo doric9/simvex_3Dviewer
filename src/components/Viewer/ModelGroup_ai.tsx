@@ -2,7 +2,7 @@
 // AI-powered ModelGroup with Constraint Resolver for tight assembly
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { Machinery } from '../../types';
 import { useModelAnimations_ai } from '../../hooks/useModelAnimations_ai';
@@ -250,11 +250,13 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
 
   // Final Merge
   const finalPositions = useMemo(() => {
-    // [User Priority] If it's a tuned model like Suspension, ALWAYS use manual sequential logic
-    // or if we have high-confidence manual positions, use them as 'Base Truth'
-    const isTunedModel = ['Suspension', 'V4_Engine', 'Drone'].includes(machinery.id);
+    const normalizedId = machinery.id.toLowerCase().trim();
+    const isTunedModel = ['suspension', 'v4_engine', 'drone', 'robot arm'].includes(normalizedId);
 
-    if (isTunedModel) return manualSequentialPositions;
+    if (isTunedModel) {
+      console.log(`[ModelGroup] '${machinery.id}' detected as Tuned Model. Using MANUAL positions.`);
+      return manualSequentialPositions;
+    }
     if (useFallback || aiError) return manualSequentialPositions;
 
     // For experimental AI-first models, prioritize resolver result
@@ -281,11 +283,16 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
         // [User Request] Rotational Animation for NUT
         const normalize = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '');
         const idNorm = normalize(part.name);
-        let rotation: [number, number, number] = [0, 0, 0];
+        let rotation: [number, number, number] = part.rotation || [0, 0, 0];
 
         if (machinery.id === 'Suspension' && idNorm.includes('nut')) {
           // Synchronous rotation 5 full turns over global factor
-          rotation = [0, explodeFactor * Math.PI * 10, 0];
+          rotation = [rotation[0], rotation[1] + explodeFactor * Math.PI * 10, rotation[2]];
+        }
+
+        if (machinery.id === 'Drone' && idNorm.includes('propeller')) {
+          // Rapid rotation 20 full turns for high-speed effect
+          rotation = [rotation[0], rotation[1] + explodeFactor * Math.PI * 40, rotation[2]];
         }
         // Check if part was matched in AI result
         // const pNorm = normalize(part.name);
@@ -295,11 +302,25 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
         // });
         // const hasConstraint = !!aiPart?.constraint;
 
-        // DEBUG: Render Axes to show position even if model is invisible
-        // <axesHelper args={[10]} position={[position.x, position.y, position.z]} />
-
         return (
           <group key={part.name}>
+            <axesHelper args={[50]} position={[position.x, position.y, position.z]} />
+
+            <Html position={[position.x, position.y, position.z]} center distanceFactor={15}>
+              <div style={{
+                background: 'rgba(0,0,0,0.8)',
+                color: '#00ff00',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                border: '1px solid #00ff00',
+                pointerEvents: 'none',
+                fontFamily: 'monospace'
+              }}>
+                {part.name}: {position.x.toFixed(1)}, {position.y.toFixed(1)}, {position.z.toFixed(1)}
+              </div>
+            </Html>
+
             <MachinePart
               partName={part.name}
               filePath={part.file}
@@ -313,7 +334,6 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
               onLoaded={handleMeshLoaded}
               globalScale={globalScale}
             />
-            {/* DEBUG OVERLAY REMOVED - User verified parts exist */}
           </group>
         );
       })}

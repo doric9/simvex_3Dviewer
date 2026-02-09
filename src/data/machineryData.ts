@@ -1,47 +1,6 @@
 import { Machinery } from '../types';
 
 export const machineryData: Record<string, Machinery> = {
-  V4_Engine: {
-    id: 'V4_Engine',
-    name: 'V4 실린더 엔진',
-    description: '내연기관의 핵심인 4기통 V형 엔진입니다. (시연용 1기통 정밀 모형)',
-    theory: `
-**작동 원리:**
-1. 흡입 -> 2. 압축 -> 3. 폭발 -> 4. 배기
-
-**주요 부품:**
-- Piston: 연소 압력으로 왕복 운동
-- Crankshaft: 직선 운동을 회전 운동으로 변환
-- Connecting Rod: 피스톤과 크랭크 연결
-`,
-    thumbnail: '/models/V4_Engine/V4실린더 엔진 조립도.png',
-    parts: [
-      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '회전 운동 메인 축', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 하단 캡', position: [0, -4, 10], explodeDirection: [0, -1, 0], explodeDistance: 15 },
-      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '피스톤 연결봉', position: [0, 8, 10], explodeDirection: [0, 1, 0], explodeDistance: 20 },
-      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소실 피스톤', position: [0, 25, 10], explodeDirection: [0, 1, 0], explodeDistance: 25 },
-      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 고정 핀', position: [0, 25, 10], explodeDirection: [1, 0, 0], explodeDistance: 15 },
-      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '압축 및 오일 제어 링', position: [0, 32, 10], explodeDirection: [0, 1, 0], explodeDistance: 35 },
-    ],
-  },
-  Drone: {
-    id: 'Drone',
-    name: '쿼드콥터 드론',
-    description: '4개의 로터를 이용해 비행하는 드론 시스템입니다.',
-    theory: `
-**비행 제어:**
-- 4개 모터의 RPM 조절을 통해 상승, 하강, 회전, 이동을 수행합니다.
-`,
-    thumbnail: '/models/Drone/조립도1.png',
-    parts: [
-      { name: 'Main Frame', file: '/models/Drone/Main frame.glb', material: 'Carbon Fiber', role: '기체 본체 프레임', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Propeller FR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 우측 프로펠러', position: [25, 5, 25], explodeDirection: [1, 1, 1], explodeDistance: 30, explodeSpeed: 1.5 },
-      { name: 'Propeller FL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 좌측 프로펠러', position: [-25, 5, 25], explodeDirection: [-1, 1, 1], explodeDistance: 30, explodeSpeed: 1.5 },
-      { name: 'Propeller RR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 우측 프로펠러', position: [25, 5, -25], explodeDirection: [1, 1, -1], explodeDistance: 30, explodeSpeed: 1.5 },
-      { name: 'Propeller RL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 좌측 프로펠러', position: [-25, 5, -25], explodeDirection: [-1, 1, -1], explodeDistance: 30, explodeSpeed: 1.5 },
-      { name: 'Landing Gear', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '착륙용 레그', position: [0, -10, 0], explodeDirection: [0, -1, 0], explodeDistance: 20 },
-    ],
-  },
   Suspension: {
     id: 'Suspension',
     name: '서스펜션',
@@ -94,6 +53,68 @@ export const machineryData: Record<string, Machinery> = {
       },
     ],
   },
+  'Robot Arm': {
+    id: 'Robot Arm',
+    name: '로봇 팔',
+    description: '산업용 로봇 팔입니다.',
+    theory: `
+**작동 원리:**
+여러 관절(joint)의 회전/이동으로 작업 수행
+`,
+    thumbnail: '/models/Robot Arm/로봇팔 조립도.png',
+    parts: [
+      { name: 'Base', file: '/models/Robot Arm/base.glb', material: 'Aluminum', role: '로봇 베이스', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Part 2 (Shoulder)', file: '/models/Robot Arm/Part2.glb', material: 'Aluminum', role: '1번 관절 링크', position: [0, 4.1, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 30 },
+      { name: 'Part 3 (Arm Link 1)', file: '/models/Robot Arm/Part3.glb', material: 'Aluminum', role: '상부 암 링크', position: [-1.08, 13, 8.5], rotation: [2.35, 0, 1.57], explodeDirection: [0, 1, 0.5], explodeDistance: 60 },
+      { name: 'Part 4 (Arm Link 2)', file: '/models/Robot Arm/Part4.glb', material: 'Aluminum', role: '하부 암 링크', position: [1.6, 28.0, -7.4], rotation: [-0.087, 0, 0], explodeDirection: [0, 1, -0.5], explodeDistance: 90 },
+      { name: 'Part 5 (Joint Link 3)', file: '/models/Robot Arm/Part5.glb', material: 'Aluminum', role: '중간 관절 링크', position: [1.6, 29.3, 7.9], rotation: [-0.087, 0, 0], explodeDirection: [0, 1, 0.5], explodeDistance: 120 },
+      { name: 'Part 6 (Joint Link 4)', file: '/models/Robot Arm/Part6.glb', material: 'Aluminum', role: '전방 관절 링크', position: [1.6, 28, 15.0], rotation: [-0.698, 0, 0], explodeDirection: [0, 1, 0.8], explodeDistance: 150 },
+      { name: 'Part 7 (Joint Link 5)', file: '/models/Robot Arm/Part7.glb', material: 'Aluminum', role: '손목 관절 링크', position: [1.6, 26, 16.7], rotation: [0.887, 0, 0], explodeDirection: [0, 1, 1], explodeDistance: 180 },
+      { name: 'Part 8 (Hand) - Left', file: '/models/Robot Arm/Part8.glb', material: 'Aluminum', role: '그리퍼 L', position: [0, 21.7, 19.6], rotation: [-0.698, 0, -0.3], explodeDirection: [-1, 1, 1], explodeDistance: 220 },
+      { name: 'Part 8 (Hand) - Right', file: '/models/Robot Arm/Part8.glb', material: 'Aluminum', role: '그리퍼 R', position: [3.2, 22.4, 20.4], rotation: [-0.698, 3.14, -0.3], explodeDirection: [1, 1, 1], explodeDistance: 220 },
+    ],
+  },
+  V4_Engine: {
+    id: 'V4_Engine',
+    name: 'V4 실린더 엔진',
+    description: '내연기관의 핵심인 4기통 V형 엔진입니다. (시연용 1기통 정밀 모형)',
+    theory: `
+**작동 원리:**
+1. 흡입 -> 2. 압축 -> 3. 폭발 -> 4. 배기
+
+**주요 부품:**
+- Piston: 연소 압력으로 왕복 운동
+- Crankshaft: 직선 운동을 회전 운동으로 변환
+- Connecting Rod: 피스톤과 크랭크 연결
+`,
+    thumbnail: '/models/V4_Engine/V4실린더 엔진 조립도.png',
+    parts: [
+      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '회전 운동 메인 축', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 하단 캡', position: [0, -4, 10], explodeDirection: [0, -1, 0], explodeDistance: 15 },
+      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '피스톤 연결봉', position: [0, 8, 10], explodeDirection: [0, 1, 0], explodeDistance: 20 },
+      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소실 피스톤', position: [0, 25, 10], explodeDirection: [0, 1, 0], explodeDistance: 25 },
+      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 고정 핀', position: [0, 25, 10], explodeDirection: [1, 0, 0], explodeDistance: 15 },
+      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '압축 및 오일 제어 링', position: [0, 32, 10], explodeDirection: [0, 1, 0], explodeDistance: 35 },
+    ],
+  },
+  Drone: {
+    id: 'Drone',
+    name: '쿼드콥터 드론',
+    description: '4개의 로터를 이용해 비행하는 드론 시스템입니다.',
+    theory: `
+**비행 제어:**
+- 4개 모터의 RPM 조절을 통해 상승, 하강, 회전, 이동을 수행합니다.
+`,
+    thumbnail: '/models/Drone/조립도1.png',
+    parts: [
+      { name: 'Main Frame', file: '/models/Drone/Main frame.glb', material: 'Carbon Fiber', role: '기체 본체 프레임', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
+      { name: 'Propeller FR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 우측 프로펠러', position: [25, 5, 25], explodeDirection: [1, 1, 1], explodeDistance: 40, explodeSpeed: 1.5 },
+      { name: 'Propeller FL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '전방 좌측 프로펠러', position: [-25, 5, 25], explodeDirection: [-1, 1, 1], explodeDistance: 40, explodeSpeed: 1.5 },
+      { name: 'Propeller RR', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 우측 프로펠러', position: [25, 5, -25], explodeDirection: [1, 1, -1], explodeDistance: 40, explodeSpeed: 1.5 },
+      { name: 'Propeller RL', file: '/models/Drone/Impellar Blade.glb', material: 'Plastic', role: '후방 좌측 프로펠러', position: [-25, 5, -25], explodeDirection: [-1, 1, -1], explodeDistance: 40, explodeSpeed: 1.5 },
+      { name: 'Landing Gear', file: '/models/Drone/Leg.glb', material: 'Plastic', role: '착륙용 레그', position: [0, -10, 0], explodeDirection: [0, -1, 0], explodeDistance: 25 },
+    ],
+  },
   'Leaf Spring': {
     id: 'Leaf Spring',
     name: '판 스프링',
@@ -133,23 +154,6 @@ export const machineryData: Record<string, Machinery> = {
       { name: 'Fixed Jaw', file: '/models/Machine Vice/Part2 Feste Backe.glb', material: 'Steel', role: '고정용 조', position: [0, 10, 20], explodeDirection: [0, 0, 1] },
       { name: 'Movable Jaw', file: '/models/Machine Vice/Part3-lose backe.glb', material: 'Steel', role: '이동용 조', position: [0, 10, -20], explodeDirection: [0, 0, -1] },
       { name: 'Trapez Spindle', file: '/models/Machine Vice/Part7-TrapezSpindel.glb', material: 'Steel', role: '구동용 스핀들 나사', position: [0, 5, -40], explodeDirection: [0, 0, -1] },
-    ],
-  },
-  'Robot Arm': {
-    id: 'Robot Arm',
-    name: '로봇 팔',
-    description: '산업용 로봇 팔입니다.',
-    theory: `
-**작동 원리:**
-여러 관절(joint)의 회전/이동으로 작업 수행
-`,
-    thumbnail: '/models/Robot Arm/로봇팔 조립도.png',
-    parts: [
-      { name: 'Base', file: '/models/Robot Arm/base.glb', material: 'Aluminum', role: '로봇 베이스', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Shoulder', file: '/models/Robot Arm/Part2.glb', material: 'Aluminum', role: '1번 관절 링크', position: [0, 10, 0], explodeDirection: [0, 1, 0] },
-      { name: 'Arm Upper', file: '/models/Robot Arm/Part3.glb', material: 'Aluminum', role: '상부 암 링크', position: [0, 25, 0], explodeDirection: [0, 1, 0] },
-      { name: 'Arm Lower', file: '/models/Robot Arm/Part4.glb', material: 'Aluminum', role: '하부 암 링크', position: [0, 45, 0], explodeDirection: [0, 1, 0] },
-      { name: 'Gripper', file: '/models/Robot Arm/Part8.glb', material: 'Aluminum', role: '엔드 이펙터 그리퍼', position: [0, 70, 0], explodeDirection: [0, 1, 0] },
     ],
   },
   'Robot Gripper': {

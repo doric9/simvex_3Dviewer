@@ -6,16 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v0.5.2] - 2026-02-09
+## [v0.5.4] - 2026-02-09
+
+### Added
+- **로봇 팔(Robot Arm) 정밀 조립 완결**: 9개 부품(Base ~ Dual Gripper)에 대한 고정밀 좌표 시스템 구축.
+- **듀얼 그리퍼(Dual Hand) 시스템**: Part 8을 복제 및 ZY 평면 대칭 임플란트(Left/Right)하여 실제 산업용 로봇 도면과 일치화.
+- **피벗 동기화**: Part 7(Wrist)의 조인트 구멍과 Part 8(Hand)의 조립 핀 위치를 시각적으로 완벽하게 일치시킴.
+- **폭발도(Exploded View) 최적화**: 팔의 기구학적 각도를 고려한 다각도 부품 전개 및 유격 확보.
+
+### Improved
+- **데이터 무결성**: 사용자 수동 보정값을 `machineryData.ts`에 영구 반영하여 '하드코딩된 신뢰(Hardcoded-Truth)' 데이터셋 확보.
+
+## [v0.5.3] - 2026-02-09
 
 ### Fixed
 - **서스펜션(Suspension) 모델 완벽 복원**: v0.5.0의 정밀 좌표 및 스택 순서([BASE, SPRING, NUT, ROD]) 원복.
 - **애니메이션 "뭉침(Clumping)" 현상 해결**: 순차적 윈도우 방식을 제거하고, 개별 속도 차등(Differential Velocity)을 적용한 동시 분해 로직으로 회귀하여 유동성 확보.
 - **너트 분해 완결성 수정**: 너트 이동 속도를 정상화하여 슬라이더 100% 지점에서 전개가 멈추는 버그 수정.
+- **시각적 등간격(Visual Equidistant) 시스템**: 메쉬 부피(스프링 높이 등)를 고려하여 100% 분해 시 모든 부품 사이의 '빈 공간'이 30단위로 동일하게 유지되도록 교정.
 
 ### Added
-- **시각적 등간격(Visual Equidistant) 시스템**: 메쉬 부피(스프링 높이 등)를 고려하여 100% 분해 시 모든 부품 사이의 '빈 공간'이 30단위로 동일하게 유지되도록 교정.
 - **Manual-First 기술 결정론**: 서스펜션 등 튜닝된 모델은 AI 분석 대신 `machineryData.ts`의 수동 설정값을 절대적 진실로 사용하도록 강제 (AI 간섭 차단).
+
+## [v0.5.2] - 2026-02-09
+
+### Fixed
+- **UI/UX 디자인 전면 개편**: 현대적이고 세련된 프리미엄 디자인 고도화 적용.
+- **파비콘(Favicon) 최적화**: 프로젝트 아이덴티티에 맞는 신규 아이콘 반영.
+- **MVP 조작 규격 준수 (Right-click Rotate)**: 기획서 요구 사양에 맞춰 마우스 컨트롤 맵핑 수정 (우클릭: 회전, 좌클릭: 이동).
+- **데이터 보존(Persistence) 강화**: 페이지 새로고침 시에도 이전의 카메라 위치 및 줌 상태가 완벽하게 복원되도록 수정.
+
+### Added
+- **EVALUATION_CHECK.md**: 해커톤 기획서 요건 대비 구현 현황 문서 추가.
 
 ## [v0.5.1] - 2026-02-09
 

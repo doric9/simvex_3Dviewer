@@ -29,6 +29,7 @@ export interface MachineryPart {
   explodeDirection?: [number, number, number]; // Direction vector for explosion (normalized)
   explodeDistance?: number; // Custom maximum distance for this part
   explodeSpeed?: number;    // Custom speed multiplier for this part
+  rotation?: [number, number, number]; // [x, y, z] initial rotation in radians
   isGround?: boolean; // If true, this part stays fixed during explosion
   // v0.3.3: Constraint 기반 조립 시스템
   constraint?: AssemblyConstraint;
