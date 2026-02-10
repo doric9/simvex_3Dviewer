@@ -35,13 +35,13 @@ MACHINERY_DATA: dict[str, Machinery] = {
 - Crankshaft: 피스톤의 직선 운동을 회전 운동으로 변환
 - Connecting Rod: 피스톤과 크랭크샤프트 연결""",
         "parts": [
-            {"name": "Piston", "material": "Aluminum", "role": "왕복 운동으로 압력 생성"},
-            {"name": "Crankshaft", "material": "Steel", "role": "회전 운동 변환"},
-            {"name": "Connecting Rod", "material": "Steel", "role": "피스톤과 크랭크샤프트 연결"},
-            {"name": "Connecting Rod Cap", "material": "Steel", "role": "연결봉 고정"},
-            {"name": "Conrod Bolt", "material": "Steel", "role": "볼트 체결"},
-            {"name": "Piston Pin", "material": "Steel", "role": "피스톤 핀"},
-            {"name": "Piston Ring", "material": "Cast Iron", "role": "밀봉 링"},
+            {"name": "Crankshaft", "material": "Steel", "role": "왕복↔회전 변환 메인 크랭크축"},
+            {"name": "Connecting Rod Cap", "material": "Steel", "role": "커넥팅 로드 빅엔드 하부 캡 (크랭크 저널 포위)"},
+            {"name": "Conrod Bolt", "material": "Steel", "role": "커넥팅 로드 캡 체결 볼트"},
+            {"name": "Connecting Rod", "material": "Steel", "role": "피스톤-크랭크 연결 및 직선↔회전 운동 변환"},
+            {"name": "Piston Pin", "material": "Steel", "role": "피스톤 리스트 핀 (소단부 관통 결합)"},
+            {"name": "Piston", "material": "Aluminum", "role": "연소 압력 수용 및 왕복 운동 발생"},
+            {"name": "Piston Ring", "material": "Cast Iron", "role": "실린더 벽 밀봉 및 오일 제어 (압축/오일 링)"},
         ],
     },
     "Drone": {

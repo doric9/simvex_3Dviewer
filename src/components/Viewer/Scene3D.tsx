@@ -7,8 +7,8 @@
  * - 설정값은 Hook에서 가져옴
  */
 
-import { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useEffect, Suspense } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { PerspectiveCamera, Environment, Html, GizmoHelper, GizmoViewport, TrackballControls } from '@react-three/drei';
 import { Machinery } from '../../types';
 import { ModelGroup_ai } from './ModelGroup_ai';
@@ -20,6 +20,35 @@ import PhysicsWrapper from './PhysicsWrapper';
 
 interface Scene3DProps {
   machinery: Machinery;
+}
+
+/**
+ * 🛰️ CameraResetListener
+ * Canvas 내부에 위치하여 useThree()를 통해 카메라와 컨트롤에 접근합니다.
+ * resetTrigger가 변경될 때 카메라와 컨트롤을 초기화합니다.
+ */
+function CameraResetListener() {
+  const { camera, controls } = useThree();
+  const resetTrigger = useViewerStore((state) => state.resetTrigger);
+
+  useEffect(() => {
+    if (resetTrigger && resetTrigger > 0) {
+      console.log('[Scene3D] Resetting View (Robust)...');
+
+      // 1. Reset Camera position
+      camera.position.set(100, 100, 100);
+      camera.lookAt(0, 0, 0);
+
+      // 2. Reset Controls
+      if (controls) {
+        // TrackballControls or OrbitControls reset
+        (controls as any).target?.set(0, 0, 0);
+        (controls as any).update?.();
+      }
+    }
+  }, [resetTrigger, camera, controls]);
+
+  return null;
 }
 
 export default function Scene3D({ machinery }: Scene3DProps) {
@@ -39,6 +68,9 @@ export default function Scene3D({ machinery }: Scene3DProps) {
   return (
     <Canvas shadows>
       <PerspectiveCamera makeDefault position={cameraPosition as [number, number, number]} fov={50} />
+
+      {/* 카메라 리셋 리스너 (Canvas 내부에 위치해야 useThree 접근 가능) */}
+      <CameraResetListener />
 
       {/* 네비게이션 기즈모 (UX 개선: 컨트롤 가이드와 겹침 방지를 위해 우측 상단 배치) */}
       <GizmoHelper

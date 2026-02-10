@@ -88,13 +88,15 @@ export const machineryData: Record<string, Machinery> = {
 - Connecting Rod: 피스톤과 크랭크 연결
 `,
     thumbnail: '/models/V4_Engine/V4실린더 엔진 조립도.png',
+    preferredScale: 60,
     parts: [
-      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '회전 운동 메인 축', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 하단 캡', position: [0, -4, 10], explodeDirection: [0, -1, 0], explodeDistance: 15 },
-      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '피스톤 연결봉', position: [0, 8, 10], explodeDirection: [0, 1, 0], explodeDistance: 20 },
-      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소실 피스톤', position: [0, 25, 10], explodeDirection: [0, 1, 0], explodeDistance: 25 },
-      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 고정 핀', position: [0, 25, 10], explodeDirection: [1, 0, 0], explodeDistance: 15 },
-      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '압축 및 오일 제어 링', position: [0, 32, 10], explodeDirection: [0, 1, 0], explodeDistance: 35 },
+      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '왕복↔회전 변환 메인 크랭크축', position: [0, 0, 0], rotation: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0], color: '#A0A0A0' },
+      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 빅엔드 하부 캡', position: [0, -1.0, 0], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 20, color: '#808080' },
+      { name: 'Conrod Bolt', file: '/models/V4_Engine/Conrod Bolt.glb', material: 'Steel', role: '캡 체결 볼트', position: [0, -2.0, 0], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 40, color: '#DAA520' }, // Goldenish bolt
+      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '직선↔회전 운동 변환 로드', position: [0, 0, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 30, color: '#707070' },
+      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 리스트 핀', position: [0, 5.2, 0], rotation: [0, 0, 0], explodeDirection: [1, 0, 0], explodeDistance: 50, color: '#C0C0C0' },
+      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소 압력 수용 피스톤', position: [0, 5.2, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 60, color: '#E0E0E0' },
+      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '기밀 유지 피스톤 링', position: [0, 7.5, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 80, color: '#333333' },
     ],
   },
   Drone: {

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v0.5.5] - 2026-02-09
+
+### Added
+- **V4 Engine 정밀 조립 폴리싱**: 커넥팅 로드 볼트(Conrod Bolt) 부품 추가 및 기구학적 위치 정밀 캘리브레이션.
+- **메타데이터 강화**: 각 엔진 부품의 역할(Role) 및 소재(Material) 정보 보강.
+- **애니메이션 최적화**: 피스톤 핀(lateral eject) 및 피스톤 링의 폭발도(Exploded View) 전개 방향 및 거리 최적화.
+
 ## [v0.5.4] - 2026-02-09
 
 ### Added
