@@ -373,22 +373,129 @@ export const machineryData: Record<string, Machinery> = {
   'Machine Vice': {
     id: 'Machine Vice',
     name: '공작 기계 바이스',
-    description: '공작물을 고정하는 장치입니다.',
+    description: '나사 구동 방식으로 공작물을 강력하게 고정하는 정밀 바이스입니다.',
     theory: `
 **작동 원리:**
-나사의 회전으로 조(jaw)를 이동시켜 공작물 고정
+사다리꼴 나사(Trapez Spindle)를 손잡이로 회전시키면, 이동 조(Movable Jaw)가 직선 운동하여 고정 조(Fixed Jaw)와의 사이에 공작물을 고정합니다.
 
-**구성:**
-- 고정 조: 움직이지 않음
-- 이동 조: 나사로 이동
-- 스핀들: 조 이동
+**주요 기능:**
+- **강력 고정:** 사다리꼴 나사의 자동 잠금(Self-lock) 특성으로 진동에도 풀리지 않음
+- **정밀 위치 결정:** 안내 레일(Guide Rail)이 이동 조의 직진도를 보장
+- **다양한 공작물 대응:** 조(Jaw) 교체로 다양한 형상의 공작물에 적용
+
+**주요 부품:**
+- **Base Plate:** 작업대에 고정되는 기초판
+- **Main Body:** 바이스의 뼈대로 안내면을 제공
+- **Guide Rail:** 이동 조의 직진 운동을 안내
+- **Fixed / Movable Jaw:** 공작물을 양측에서 잡아 고정
+- **Clamping Jaw:** 공작물 접촉면으로 교체 가능
+- **Trapez Spindle:** 회전→직선 변환 핵심 나사축
+- **Spindle Socket:** 스핀들을 본체에 지지하는 소켓
+- **Pressure Sleeve:** 스핀들 축 방향 하중을 지지하는 슬리브
 `,
     thumbnail: '/models/Machine Vice/공작 기계 바이스.jpg',
+    preferredScale: 80,
     parts: [
-      { name: 'Main Body', file: '/models/Machine Vice/Part1.glb', material: 'Cast Iron', role: '바이스 본체', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Fixed Jaw', file: '/models/Machine Vice/Part2 Feste Backe.glb', material: 'Steel', role: '고정용 조', position: [0, 10, 20], explodeDirection: [0, 0, 1] },
-      { name: 'Movable Jaw', file: '/models/Machine Vice/Part3-lose backe.glb', material: 'Steel', role: '이동용 조', position: [0, 10, -20], explodeDirection: [0, 0, -1] },
-      { name: 'Trapez Spindle', file: '/models/Machine Vice/Part7-TrapezSpindel.glb', material: 'Steel', role: '구동용 스핀들 나사', position: [0, 5, -40], explodeDirection: [0, 0, -1] },
+      {
+        name: 'Base Plate',
+        file: '/models/Machine Vice/Part8-grundplatte.glb',
+        material: 'Cast Iron',
+        role: '작업대 고정용 기초판',
+        position: [0, 0, 0],
+        isGround: true,
+        explodeDirection: [0, 0, 0],
+        color: '#5A5A5A',  // Dark gray – cast iron base
+      },
+      {
+        name: 'Main Body',
+        file: '/models/Machine Vice/Part1.glb',
+        material: 'Cast Iron',
+        role: '바이스 본체 프레임',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0],
+        explodeDistance: 30,
+        color: '#708090',  // Slate gray – main body
+      },
+      {
+        name: 'Guide Housing',
+        file: '/models/Machine Vice/Part1 Fuhrung.glb',
+        material: 'Cast Iron',
+        role: '이동 조 안내 하우징',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0],
+        explodeDistance: 50,
+        color: '#7B8D8E',  // Pewter – guide housing
+      },
+      {
+        name: 'Guide Rail',
+        file: '/models/Machine Vice/Part6-fuhrungschiene.glb',
+        material: 'Hardened Steel',
+        role: '직진 운동 안내 레일',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0.5],
+        explodeDistance: 70,
+        color: '#B8860B',  // Dark goldenrod – precision rail
+      },
+      {
+        name: 'Fixed Jaw',
+        file: '/models/Machine Vice/Part2 Feste Backe.glb',
+        material: 'Steel',
+        role: '고정 조',
+        position: [0, 0, 0],
+        explodeDirection: [0, 0.5, 1],
+        explodeDistance: 60,
+        color: '#2E8B57',  // Sea green – fixed jaw
+      },
+      {
+        name: 'Movable Jaw',
+        file: '/models/Machine Vice/Part3-lose backe.glb',
+        material: 'Steel',
+        role: '이동 조',
+        position: [0, 0, 0],
+        explodeDirection: [0, 0.5, -1],
+        explodeDistance: 60,
+        color: '#3CB371',  // Medium sea green – movable jaw
+      },
+      {
+        name: 'Clamping Jaw',
+        file: '/models/Machine Vice/Part5-Spannbacke.glb',
+        material: 'Hardened Steel',
+        role: '교체형 클램핑 조',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, -1],
+        explodeDistance: 90,
+        color: '#228B22',  // Forest green – clamping surface
+      },
+      {
+        name: 'Spindle Socket',
+        file: '/models/Machine Vice/Part4 spindelsockel.glb',
+        material: 'Steel',
+        role: '스핀들 지지 소켓',
+        position: [0, 0, 0],
+        explodeDirection: [0, 0, -1],
+        explodeDistance: 80,
+        color: '#CD853F',  // Peru – spindle socket
+      },
+      {
+        name: 'Trapez Spindle',
+        file: '/models/Machine Vice/Part7-TrapezSpindel.glb',
+        material: 'Steel',
+        role: '사다리꼴 나사 스핀들',
+        position: [0, 0, 0],
+        explodeDirection: [0, 0, -1],
+        explodeDistance: 110,
+        color: '#DAA520',  // Goldenrod – spindle shaft
+      },
+      {
+        name: 'Pressure Sleeve',
+        file: '/models/Machine Vice/Part9-Druckhulse.glb',
+        material: 'Steel',
+        role: '축 방향 압력 전달 슬리브',
+        position: [0, 0, 0],
+        explodeDirection: [0, 0, -1],
+        explodeDistance: 130,
+        color: '#A0522D',  // Sienna – pressure sleeve
+      },
     ],
   },
   'Robot Gripper': {

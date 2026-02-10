@@ -269,7 +269,7 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
   // Final Merge
   const finalPositions = useMemo(() => {
     const normalizedId = machinery.id.toLowerCase().trim();
-    const isTunedModel = ['suspension', 'v4_engine', 'drone', 'robot arm'].includes(normalizedId);
+    const isTunedModel = ['suspension', 'v4_engine', 'drone', 'robot arm', 'leaf spring', 'machine vice'].includes(normalizedId);
 
     if (isTunedModel) {
       console.log(`[ModelGroup] '${machinery.id}' detected as Tuned Model. Using MANUAL positions.`);
