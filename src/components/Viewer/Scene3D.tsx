@@ -7,7 +7,7 @@
  * - 설정값은 Hook에서 가져옴
  */
 
-import { Suspense } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera, Environment, Html, GizmoHelper, GizmoViewport, TrackballControls } from '@react-three/drei';
 import { Machinery } from '../../types';
@@ -30,11 +30,35 @@ export default function Scene3D({ machinery }: Scene3DProps) {
     selectedPart,
     setSelectedPart,
     cameraPosition,
-    cameraTarget
+    cameraTarget,
+    resetTrigger = 0
   } = useViewerStore();
+
+  const controlsRef = useRef<any>(null);
 
   // 🎣 Hook 1: 씬 설정 (본인)
   const { lightingConfig, environment } = useSceneSetup();
+
+  // Reset Camera & Controls when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger > 0 && controlsRef.current) {
+      console.log('[Scene3D] Resetting View...');
+      const controls = controlsRef.current;
+
+      // 1. Reset Controls Target
+      controls.target.set(0, 0, 0);
+
+      // 2. Reset Camera Position
+      const camera = controls.object;
+      if (camera) {
+        camera.position.set(100, 100, 100);
+        camera.lookAt(0, 0, 0);
+      }
+
+      // 3. Update Controls Internal State
+      controls.update();
+    }
+  }, [resetTrigger]);
 
   return (
     <Canvas shadows>
@@ -87,6 +111,7 @@ export default function Scene3D({ machinery }: Scene3DProps) {
 
       {/* 카메라 컨트롤 (TrackballControls: 자유 회전 + 패닝 보장) */}
       <TrackballControls
+        ref={controlsRef}
         makeDefault
         target={cameraTarget as [number, number, number]}
         mouseButtons={{
