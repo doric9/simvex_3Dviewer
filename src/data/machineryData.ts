@@ -251,21 +251,123 @@ export const machineryData: Record<string, Machinery> = {
   'Leaf Spring': {
     id: 'Leaf Spring',
     name: '판 스프링',
-    description: '여러 겹의 강판을 겹쳐 만든 스프링입니다.',
+    description: '여러 겹의 탄성이 있는 강판을 겹쳐 만든 충격 흡수 장치입니다.',
     theory: `
 **작동 원리:**
-여러 판이 굽어지면서 하중 분산
+강철판이 굽어질 때 발생하는 복원력을 이용해 충격을 흡수합니다. 
+여러 겹의 판을 겹침으로써 마찰에 의한 감쇠 효과와 높은 하중을 견딜 수 있는 능력을 제공합니다.
 
-**특징:**
-- 높은 하중 지지
-- 트럭, 대형차량에 사용
+**주요 기능:**
+- **하중 지지:** 무거운 차체와 적재물의 무게를 분산하여 지지
+- **충격 완화:** 노면의 불규칙한 충격을 흡수하여 승차감 및 안정성 확보
+- **자기 감쇠:** 판들 사이의 마찰이 진동을 서서히 멈추게 함
+
+**주요 부품:**
+- **Leaf Layer:** 주된 양력을 발생하는 강판 레이어
+- **Clamp:** 여러 겹의 레이어를 하나로 묶어 고정하는 장치
+- **Support & Rubber:** 차체와 스프링을 연결하고 소음/진동을 차단하는 부싱류
 `,
     thumbnail: '/models/Leaf Spring/판스프링 조립도.png',
+    preferredScale: 80,
     parts: [
-      { name: 'Lower Plate', file: '/models/Leaf Spring/Leaf-Layer.glb', material: 'Spring Steel', role: '메인 판 레이어', position: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] },
-      { name: 'Support', file: '/models/Leaf Spring/Support.glb', material: 'Steel', role: '서포트 부싱', position: [0, -5, 0], explodeDirection: [0, -1, 0] },
-      { name: 'Clamp 1', file: '/models/Leaf Spring/Clamp-Primary.glb', material: 'Steel', role: '고정용 1차 클램프', position: [0, 10, 0], explodeDirection: [0, 1, 0] },
-      { name: 'Clamp 2', file: '/models/Leaf Spring/Clamp-Secondary.glb', material: 'Steel', role: '고정용 2차 클램프', position: [0, 20, 0], explodeDirection: [0, 1, 0] },
+      {
+        name: 'Main Leaf Layer',
+        file: '/models/Leaf Spring/Leaf-Layer.glb',
+        material: 'Spring Steel',
+        role: '메인 탄성 판',
+        position: [0, 0, 0],
+        isGround: true,
+        explodeDirection: [0, 0, 0],
+        color: '#4A7C59',  // Forest green – main spring steel plate
+      },
+      {
+        name: 'Center Clamp',
+        file: '/models/Leaf Spring/Clamp-Center.glb',
+        material: 'Steel',
+        role: '중앙 고정 클램프',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0],
+        explodeDistance: 40,
+        constraint: { type: 'StackedOn', parentPart: 'Main Leaf Layer', offset: [0, 5, 0] },
+        color: '#D4A030',  // Amber – center clamp
+      },
+      {
+        name: 'Primary Clamp',
+        file: '/models/Leaf Spring/Clamp-Primary.glb',
+        material: 'Steel',
+        role: '측면 주 클램프',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0],
+        explodeDistance: 60,
+        constraint: { type: 'StackedOn', parentPart: 'Main Leaf Layer', offset: [-100, 2, 0] },
+        color: '#C47B2B',  // Burnt orange – primary clamp
+      },
+      {
+        name: 'Secondary Clamp',
+        file: '/models/Leaf Spring/Clamp-Secondary.glb',
+        material: 'Steel',
+        role: '측면 보조 클램프',
+        position: [0, 0, 0],
+        explodeDirection: [0, 1, 0],
+        explodeDistance: 80,
+        constraint: { type: 'StackedOn', parentPart: 'Main Leaf Layer', offset: [100, 2, 0] },
+        color: '#E8943A',  // Orange – secondary clamp
+      },
+      {
+        name: 'Main Support',
+        file: '/models/Leaf Spring/Support.glb',
+        material: 'Steel',
+        role: '메인 연결 서포터',
+        position: [0, 0, 0],
+        explodeDirection: [0, -1, 0],
+        explodeDistance: 40,
+        constraint: { type: 'StackedOn', parentPart: 'Main Leaf Layer', offset: [0, -5, 0] },
+        color: '#5B8FA8',  // Steel blue – main support
+      },
+      {
+        name: 'Chassis Support',
+        file: '/models/Leaf Spring/Support-Chassis.glb',
+        material: 'Steel',
+        role: '차체 체결 브래킷',
+        position: [0, 0, 0],
+        explodeDirection: [0, -1, 0],
+        explodeDistance: 60,
+        constraint: { type: 'StackedOn', parentPart: 'Main Support', offset: [0, -4, 0] },
+        color: '#3A6B8C',  // Dark blue – chassis support
+      },
+      {
+        name: 'Rigid Support',
+        file: '/models/Leaf Spring/Support-Chassis Rigid.glb',
+        material: 'Steel',
+        role: '차체 고정 리지드 서포트',
+        position: [0, 0, 0],
+        explodeDirection: [0, -1, 0],
+        explodeDistance: 80,
+        constraint: { type: 'StackedOn', parentPart: 'Chassis Support', offset: [0, -2, 0] },
+        color: '#2E5A73',  // Navy – rigid support
+      },
+      {
+        name: 'Rubber Bushing',
+        file: '/models/Leaf Spring/Support-Rubber.glb',
+        material: 'Rubber',
+        role: '진동 흡수용 고무 부싱',
+        position: [0, 0, 0],
+        explodeDirection: [-1, -1, 0],
+        explodeDistance: 100,
+        constraint: { type: 'StackedOn', parentPart: 'Rigid Support', offset: [-20, 0, 0] },
+        color: '#333333',  // Dark charcoal – rubber bushing
+      },
+      {
+        name: 'Rubber 60mm',
+        file: '/models/Leaf Spring/Support-Rubber 60mm.glb',
+        material: 'Rubber',
+        role: '60mm 대형 부싱',
+        position: [0, 0, 0],
+        explodeDirection: [1, -1, 0],
+        explodeDistance: 100,
+        constraint: { type: 'StackedOn', parentPart: 'Rigid Support', offset: [20, 0, 0] },
+        color: '#444444',  // Charcoal – rubber 60mm bushing
+      },
     ],
   },
   'Machine Vice': {
