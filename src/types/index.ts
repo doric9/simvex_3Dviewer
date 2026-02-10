@@ -31,6 +31,7 @@ export interface MachineryPart {
   explodeSpeed?: number;    // Custom speed multiplier for this part
   rotation?: [number, number, number]; // [x, y, z] initial rotation in radians
   isGround?: boolean; // If true, this part stays fixed during explosion
+  color?: string; // Optional: Override part color (hex)
   // v0.3.3: Constraint 기반 조립 시스템
   constraint?: AssemblyConstraint;
 }
@@ -42,6 +43,7 @@ export interface Machinery {
   theory: string;
   thumbnail: string;
   parts: MachineryPart[];
+  preferredScale?: number; // Optional scaling override
 }
 
 export interface ViewerState {
