@@ -88,15 +88,15 @@ export const machineryData: Record<string, Machinery> = {
 - Connecting Rod: 피스톤과 크랭크 연결
 `,
     thumbnail: '/models/V4_Engine/V4실린더 엔진 조립도.png',
+    preferredScale: 60,
     parts: [
-      // Assembly order: bottom-up (crank → rod cap → bolt → rod → pin → piston → ring)
-      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '왕복↔회전 변환 메인 크랭크축', position: [0, 0, 0], rotation: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0] }, // v0.5.5 Confirmed
-      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 빅엔드 하부 캡 (크랭크 저널 포위)', position: [0, -4.2, 10], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 25.0 }, // v0.5.5 Confirmed — Final Y: -29.2 (Gap: 25)
-      { name: 'Conrod Bolt', file: '/models/V4_Engine/Conrod Bolt.glb', material: 'Steel', role: '커넥팅 로드 캡 체결 볼트', position: [0, -6.5, 10], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 50.0 }, // v0.5.5 Confirmed — Final Y: -56.5 (Gap to Rod Cap: 25)
-      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '피스톤-크랭크 연결 및 직선↔회전 운동 변환', position: [0, 8.3, 10], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 25.0 }, // v0.5.5 Confirmed — Final Y: 33.3 (Gap: 25)
-      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 리스트 핀 (소단부 관통 결합)', position: [0, 24.5, 10], rotation: [0, 0, 0], explodeDirection: [1, 0, 0], explodeDistance: 50.0 }, // v0.5.5 Confirmed — Final X: 50.0 (lateral eject)
-      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소 압력 수용 및 왕복 운동 발생', position: [0, 24.8, 10], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 75.0 }, // v0.5.5 Confirmed — Final Y: 99.8 (Gap to Rod: 25)
-      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '실린더 벽 밀봉 및 오일 제어 (압축/오일 링)', position: [0, 31.5, 10], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 100.0 }, // v0.5.5 Confirmed — Final Y: 131.5 (Gap to Piston: 25)
+      { name: 'Crankshaft', file: '/models/V4_Engine/Crankshaft.glb', material: 'Steel', role: '왕복↔회전 변환 메인 크랭크축', position: [0, 0, 0], rotation: [0, 0, 0], isGround: true, explodeDirection: [0, 0, 0], color: '#A0A0A0' },
+      { name: 'Rod Cap', file: '/models/V4_Engine/Connecting Rod Cap.glb', material: 'Steel', role: '커넥팅 로드 빅엔드 하부 캡', position: [0, -1.0, 0], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 20, color: '#808080' },
+      { name: 'Conrod Bolt', file: '/models/V4_Engine/Conrod Bolt.glb', material: 'Steel', role: '캡 체결 볼트', position: [0, -2.0, 0], rotation: [0, 0, 0], explodeDirection: [0, -1, 0], explodeDistance: 40, color: '#DAA520' }, // Goldenish bolt
+      { name: 'Connecting Rod', file: '/models/V4_Engine/Connecting Rod.glb', material: 'Steel', role: '직선↔회전 운동 변환 로드', position: [0, 0, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 30, color: '#707070' },
+      { name: 'Piston Pin', file: '/models/V4_Engine/Piston Pin.glb', material: 'Steel', role: '피스톤 리스트 핀', position: [0, 5.2, 0], rotation: [0, 0, 0], explodeDirection: [1, 0, 0], explodeDistance: 50, color: '#C0C0C0' },
+      { name: 'Piston', file: '/models/V4_Engine/Piston.glb', material: 'Aluminum', role: '연소 압력 수용 피스톤', position: [0, 5.2, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 60, color: '#E0E0E0' },
+      { name: 'Piston Ring', file: '/models/V4_Engine/Piston Ring.glb', material: 'Cast Iron', role: '기밀 유지 피스톤 링', position: [0, 7.5, 0], rotation: [0, 0, 0], explodeDirection: [0, 1, 0], explodeDistance: 80, color: '#333333' },
     ],
   },
   Drone: {

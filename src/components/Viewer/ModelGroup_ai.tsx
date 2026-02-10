@@ -24,7 +24,8 @@ const MachinePart = ({
   onClick,
   onLoaded,
   globalScale,
-  rotation
+  rotation,
+  color
 }: {
   partName: string;
   filePath: string;
@@ -34,9 +35,21 @@ const MachinePart = ({
   onLoaded?: (partName: string, object: THREE.Object3D) => void;
   globalScale: number;
   rotation?: [number, number, number];
+  color?: string;
 }) => {
   const { scene } = useGLTF(filePath);
-  const clone = useMemo(() => scene.clone(), [scene]);
+  const clone = useMemo(() => {
+    const c = scene.clone();
+    if (color) {
+      c.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = child.material.clone();
+          child.material.color.set(color);
+        }
+      });
+    }
+    return c;
+  }, [scene, color]);
 
   // Apply rotation if provided
   useEffect(() => {
@@ -57,15 +70,16 @@ const MachinePart = ({
       object={clone}
       position={[position.x, position.y, position.z]}
       onClick={onClick}
-      scale={isSelected ? globalScale * 1.1 : globalScale}
+      scale={isSelected ? globalScale * 1.05 : globalScale}
     >
       {isSelected && (
         <meshStandardMaterial
           color="#ffff00"
           emissive="#ffff00"
-          emissiveIntensity={0.3}
+          emissiveIntensity={0.5}
           transparent
-          opacity={0.8}
+          opacity={0.3}
+          depthTest={false}
         />
       )}
     </primitive>
@@ -116,8 +130,13 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
       const maxDim = Math.max(size.x, size.y, size.z);
 
       let newScale = 1.0;
-      if (maxDim < 5) newScale = 20 / maxDim; // Scale up tiny models
-      else if (maxDim > 1000) newScale = 100 / maxDim; // Scale down huge models
+      if (machinery.preferredScale) {
+        newScale = machinery.preferredScale / maxDim;
+      } else if (maxDim < 5) {
+        newScale = 40 / maxDim; // v0.6.0: Increased target size for tiny models
+      } else if (maxDim > 1000) {
+        newScale = 100 / maxDim;
+      }
 
       console.log(`[ModelGroup] Base Part (${partName}) Size: ${maxDim.toFixed(3)}. Setting Global Scale: ${newScale}`);
       setGlobalScale(newScale);
@@ -338,6 +357,7 @@ export const ModelGroup_ai: React.FC<ModelGroupProps> = ({
               }}
               onLoaded={handleMeshLoaded}
               globalScale={globalScale}
+              color={part.color}
             />
           </group>
         );
