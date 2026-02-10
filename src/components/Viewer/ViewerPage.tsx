@@ -48,7 +48,7 @@ export default function ViewerPage({ machineryId }: ViewerPageProps) {
         {/* 완제품 정보 패널 */}
         {!selectedPart && (
           <div className="absolute top-4 left-4 max-w-md">
-            <ProductInfo machinery={machinery} />
+            <ProductInfo key={machinery.id} machinery={machinery} />
           </div>
         )}
 
